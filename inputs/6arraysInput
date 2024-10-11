@@ -1,0 +1,8 @@
+int main(string[] args) {
+    int[,,,] arr;
+    arr[1] = 9;
+    arr[0] = k;
+    arr[l] = 4
+    arr[s + i * -7] = 0;
+    arr[a[2]] = 1;
+}

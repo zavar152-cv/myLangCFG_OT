@@ -1,0 +1,100 @@
+digraph Tree {
+    node [shape=hexagon];
+    node_0 [label="SOURCE"]
+    node_0 -> node_1;
+    node_1 [label="FUNC_DEF"]
+    node_1 -> node_2;
+    node_2 [label="FUNC_SIGNATURE"]
+    node_2 -> node_3;
+    node_3 [label="TYPEREF"]
+    node_3 -> node_4;
+    node_4 [label="BUILTIN_TYPE"]
+    node_4 -> node_5;
+    node_5 [label="int"]
+    node_2 -> node_6;
+    node_6 [label="NAME"]
+    node_6 -> node_7;
+    node_7 [label="main"]
+    node_2 -> node_8;
+    node_8 [label="ARGDEF_LIST"]
+    node_8 -> node_9;
+    node_9 [label="ARGDEF"]
+    node_9 -> node_10;
+    node_10 [label="TYPEREF"]
+    node_10 -> node_11;
+    node_11 [label="BUILTIN_TYPE"]
+    node_11 -> node_12;
+    node_12 [label="string"]
+    node_10 -> node_13;
+    node_13 [label="ARRAY"]
+    node_9 -> node_14;
+    node_14 [label="IDENTIFIER"]
+    node_14 -> node_15;
+    node_15 [label="args"]
+    node_1 -> node_16;
+    node_16 [label="BLOCK"]
+    node_16 -> node_17;
+    node_17 [label="EXPR"]
+    node_17 -> node_18;
+    node_18 [label="="]
+    node_18 -> node_19;
+    node_19 [label="IDENTIFIER"]
+    node_19 -> node_20;
+    node_20 [label="k"]
+    node_18 -> node_21;
+    node_21 [label="+"]
+    node_21 -> node_22;
+    node_22 [label="+"]
+    node_22 -> node_23;
+    node_23 [label="+"]
+    node_23 -> node_24;
+    node_24 [label="NEG"]
+    node_24 -> node_25;
+    node_25 [label="NEG"]
+    node_25 -> node_26;
+    node_26 [label="IDENTIFIER"]
+    node_26 -> node_27;
+    node_27 [label="a"]
+    node_23 -> node_28;
+    node_28 [label="*"]
+    node_28 -> node_29;
+    node_29 [label="IDENTIFIER"]
+    node_29 -> node_30;
+    node_30 [label="c"]
+    node_28 -> node_31;
+    node_31 [label="NEG"]
+    node_31 -> node_32;
+    node_32 [label="DEC"]
+    node_32 -> node_33;
+    node_33 [label="5"]
+    node_22 -> node_34;
+    node_34 [label="NOT"]
+    node_34 -> node_35;
+    node_35 [label="IDENTIFIER"]
+    node_35 -> node_36;
+    node_36 [label="f"]
+    node_21 -> node_37;
+    node_37 [label="%"]
+    node_37 -> node_38;
+    node_38 [label="*"]
+    node_38 -> node_39;
+    node_39 [label="NEG"]
+    node_39 -> node_40;
+    node_40 [label="IDENTIFIER"]
+    node_40 -> node_41;
+    node_41 [label="k"]
+    node_38 -> node_42;
+    node_42 [label="DEC"]
+    node_42 -> node_43;
+    node_43 [label="7"]
+    node_37 -> node_44;
+    node_44 [label="+"]
+    node_44 -> node_45;
+    node_45 [label="DEC"]
+    node_45 -> node_46;
+    node_46 [label="4"]
+    node_44 -> node_47;
+    node_47 [label="DEC"]
+    node_47 -> node_48;
+    node_48 [label="5"]
+}

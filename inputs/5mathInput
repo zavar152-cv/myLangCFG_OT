@@ -1,0 +1,3 @@
+int main(string[] args) {
+    k = --a + c * -5 + !f + -k * 7 % (4 + 5);
+}

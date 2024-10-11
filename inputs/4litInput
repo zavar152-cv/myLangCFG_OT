@@ -1,0 +1,7 @@
+int main(string[] args) {
+    func(1, 'a', "lol");
+}
+
+int func(int a, char k, string s) {
+    
+}

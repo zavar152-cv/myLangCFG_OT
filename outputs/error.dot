@@ -1,0 +1,112 @@
+digraph Tree {
+    node [shape=hexagon];
+    node_0 [label="SOURCE"]
+    node_0 -> node_1;
+    node_1 [label="FUNC_DEF"]
+    node_1 -> node_2;
+    node_2 [label="FUNC_SIGNATURE"]
+    node_2 -> node_3;
+    node_3 [label="TYPEREF"]
+    node_3 -> node_4;
+    node_4 [label="BUILTIN_TYPE"]
+    node_4 -> node_5;
+    node_5 [label="int"]
+    node_2 -> node_6;
+    node_6 [label="NAME"]
+    node_6 -> node_7;
+    node_7 [label="main"]
+    node_2 -> node_8;
+    node_8 [label="ARGDEF_LIST"]
+    node_8 -> node_9;
+    node_9 [label="ARGDEF"]
+    node_9 -> node_10;
+    node_10 [label="TYPEREF"]
+    node_10 -> node_11;
+    node_11 [label="BUILTIN_TYPE"]
+    node_11 -> node_12;
+    node_12 [label="string"]
+    node_10 -> node_13;
+    node_13 [label="ARRAY"]
+    node_9 -> node_14;
+    node_14 [label="IDENTIFIER"]
+    node_14 -> node_15;
+    node_15 [label="args"]
+    node_1 -> node_16;
+    node_16 [label="BLOCK"]
+    node_16 -> node_17;
+    node_17 [label="VAR"]
+    node_17 -> node_18;
+    node_18 [label="TYPEREF"]
+    node_18 -> node_19;
+    node_19 [label="CUSTOM_TYPE"]
+    node_19 -> node_20;
+    node_20 [label="Mybool"]
+    node_17 -> node_21;
+    node_21 [label="IDENTIFIER"]
+    node_21 -> node_22;
+    node_22 [label="b"]
+    node_17 -> node_23;
+    node_23 [label="INIT"]
+    node_23 -> node_24;
+    node_24 [label="b"]
+    node_16 -> node_25;
+    node_25 [label="VAR"]
+    node_25 -> node_26;
+    node_26 [label="TYPEREF"]
+    node_26 -> node_27;
+    node_27 [label="BUILTIN_TYPE"]
+    node_27 -> node_28;
+    node_28 [label="int"]
+    node_26 -> node_29;
+    node_29 [label="ARRAY"]
+    node_29 -> node_30;
+    node_30 [label="ARRAY_SIZE"]
+    node_30 -> node_31;
+    node_31 [label=","]
+    node_30 -> node_32;
+    node_32 [label=","]
+    node_30 -> node_33;
+    node_33 [label=","]
+    node_25 -> node_34;
+    node_34 [label="IDENTIFIER"]
+    node_34 -> node_35;
+    node_35 [label="arr"]
+    node_25 -> node_36;
+    node_36 [label="INIT"]
+    node_36 -> node_37;
+    node_37 [label="arr"]
+    node_16 -> node_38;
+    node_38 [label="EXPR"]
+    node_38 -> node_39;
+    node_39 [label="="]
+    node_39 -> node_40;
+    node_40 [label="IDENTIFIER"]
+    node_40 -> node_41;
+    node_41 [label="ret"]
+    node_39 -> node_42;
+    node_42 [label="FUNC_CALL"]
+    node_42 -> node_43;
+    node_43 [label="NAME"]
+    node_43 -> node_44;
+    node_44 [label="buzz"]
+    node_42 -> node_45;
+    node_45 [label="EXPR_LIST"]
+    node_45 -> node_46;
+    node_46 [label="IDENTIFIER"]
+    node_46 -> node_47;
+    node_47 [label="k"]
+    node_45 -> node_48;
+    node_48 [label="IDENTIFIER"]
+    node_48 -> node_49;
+    node_49 [label="a"]
+    node_16 -> node_50;
+    node_50 [label="IF"]
+    node_50 -> node_51;
+    node_51 [label="EXPR"]
+    node_51 -> node_52;
+    node_52 [label="BOOL"]
+    node_52 -> node_53;
+    node_53 [label="true"]
+    node_50 -> node_54;
+    node_54 [label="Tree Error Node"]
+}

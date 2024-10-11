@@ -1,0 +1,6 @@
+int main(string[] args) {
+    int l = 5, s = 9, i;
+    Mybool b;
+    int[,,,] arr;
+    string st = "lol";
+}

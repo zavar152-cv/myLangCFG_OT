@@ -1,0 +1,232 @@
+digraph Tree {
+    node [shape=hexagon];
+    node_0 [label="SOURCE"]
+    node_0 -> node_1;
+    node_1 [label="FUNC_DEF"]
+    node_1 -> node_2;
+    node_2 [label="FUNC_SIGNATURE"]
+    node_2 -> node_3;
+    node_3 [label="TYPEREF"]
+    node_3 -> node_4;
+    node_4 [label="BUILTIN_TYPE"]
+    node_4 -> node_5;
+    node_5 [label="int"]
+    node_2 -> node_6;
+    node_6 [label="NAME"]
+    node_6 -> node_7;
+    node_7 [label="main"]
+    node_2 -> node_8;
+    node_8 [label="ARGDEF_LIST"]
+    node_8 -> node_9;
+    node_9 [label="ARGDEF"]
+    node_9 -> node_10;
+    node_10 [label="TYPEREF"]
+    node_10 -> node_11;
+    node_11 [label="BUILTIN_TYPE"]
+    node_11 -> node_12;
+    node_12 [label="string"]
+    node_10 -> node_13;
+    node_13 [label="ARRAY"]
+    node_9 -> node_14;
+    node_14 [label="IDENTIFIER"]
+    node_14 -> node_15;
+    node_15 [label="args"]
+    node_1 -> node_16;
+    node_16 [label="BLOCK"]
+    node_16 -> node_17;
+    node_17 [label="IF"]
+    node_17 -> node_18;
+    node_18 [label="EXPR"]
+    node_18 -> node_19;
+    node_19 [label="BOOL"]
+    node_19 -> node_20;
+    node_20 [label="true"]
+    node_17 -> node_21;
+    node_21 [label="BLOCK"]
+    node_21 -> node_22;
+    node_22 [label="IF"]
+    node_22 -> node_23;
+    node_23 [label="EXPR"]
+    node_23 -> node_24;
+    node_24 [label="-"]
+    node_24 -> node_25;
+    node_25 [label="+"]
+    node_25 -> node_26;
+    node_26 [label="DEC"]
+    node_26 -> node_27;
+    node_27 [label="1"]
+    node_25 -> node_28;
+    node_28 [label="IDENTIFIER"]
+    node_28 -> node_29;
+    node_29 [label="d"]
+    node_24 -> node_30;
+    node_30 [label="DEC"]
+    node_30 -> node_31;
+    node_31 [label="6"]
+    node_22 -> node_32;
+    node_32 [label="BLOCK"]
+    node_32 -> node_33;
+    node_33 [label="EXPR"]
+    node_33 -> node_34;
+    node_34 [label="="]
+    node_34 -> node_35;
+    node_35 [label="INDEXING"]
+    node_35 -> node_36;
+    node_36 [label="arr"]
+    node_35 -> node_37;
+    node_37 [label="EXPR_LIST"]
+    node_37 -> node_38;
+    node_38 [label="DEC"]
+    node_38 -> node_39;
+    node_39 [label="3"]
+    node_34 -> node_40;
+    node_40 [label="DEC"]
+    node_40 -> node_41;
+    node_41 [label="9"]
+    node_22 -> node_42;
+    node_42 [label="ELSE"]
+    node_42 -> node_43;
+    node_43 [label="BLOCK"]
+    node_43 -> node_44;
+    node_44 [label="VAR"]
+    node_44 -> node_45;
+    node_45 [label="TYPEREF"]
+    node_45 -> node_46;
+    node_46 [label="CUSTOM_TYPE"]
+    node_46 -> node_47;
+    node_47 [label="myType"]
+    node_44 -> node_48;
+    node_48 [label="IDENTIFIER"]
+    node_48 -> node_49;
+    node_49 [label="t"]
+    node_44 -> node_50;
+    node_50 [label="INIT"]
+    node_50 -> node_51;
+    node_51 [label="t"]
+    node_43 -> node_52;
+    node_52 [label="IF"]
+    node_52 -> node_53;
+    node_53 [label="EXPR"]
+    node_53 -> node_54;
+    node_54 [label="DEC"]
+    node_54 -> node_55;
+    node_55 [label="1"]
+    node_52 -> node_56;
+    node_56 [label="BLOCK"]
+    node_56 -> node_57;
+    node_57 [label="VAR"]
+    node_57 -> node_58;
+    node_58 [label="TYPEREF"]
+    node_58 -> node_59;
+    node_59 [label="BUILTIN_TYPE"]
+    node_59 -> node_60;
+    node_60 [label="int"]
+    node_57 -> node_61;
+    node_61 [label="IDENTIFIER"]
+    node_61 -> node_62;
+    node_62 [label="t"]
+    node_57 -> node_63;
+    node_63 [label="INIT"]
+    node_63 -> node_64;
+    node_64 [label="t"]
+    node_52 -> node_65;
+    node_65 [label="ELSE"]
+    node_65 -> node_66;
+    node_66 [label="BLOCK"]
+    node_66 -> node_67;
+    node_67 [label="BLOCK"]
+    node_67 -> node_68;
+    node_68 [label="VAR"]
+    node_68 -> node_69;
+    node_69 [label="TYPEREF"]
+    node_69 -> node_70;
+    node_70 [label="BUILTIN_TYPE"]
+    node_70 -> node_71;
+    node_71 [label="char"]
+    node_68 -> node_72;
+    node_72 [label="IDENTIFIER"]
+    node_72 -> node_73;
+    node_73 [label="k"]
+    node_68 -> node_74;
+    node_74 [label="INIT"]
+    node_74 -> node_75;
+    node_75 [label="k"]
+    node_17 -> node_76;
+    node_76 [label="ELSE"]
+    node_76 -> node_77;
+    node_77 [label="BLOCK"]
+    node_77 -> node_78;
+    node_78 [label="BREAK"]
+    node_16 -> node_79;
+    node_79 [label="WHILE"]
+    node_79 -> node_80;
+    node_80 [label="EXPR"]
+    node_80 -> node_81;
+    node_81 [label="+"]
+    node_81 -> node_82;
+    node_82 [label="IDENTIFIER"]
+    node_82 -> node_83;
+    node_83 [label="a"]
+    node_81 -> node_84;
+    node_84 [label="*"]
+    node_84 -> node_85;
+    node_85 [label="DEC"]
+    node_85 -> node_86;
+    node_86 [label="1"]
+    node_84 -> node_87;
+    node_87 [label="NEG"]
+    node_87 -> node_88;
+    node_88 [label="DEC"]
+    node_88 -> node_89;
+    node_89 [label="6"]
+    node_79 -> node_90;
+    node_90 [label="BLOCK"]
+    node_90 -> node_91;
+    node_91 [label="VAR"]
+    node_91 -> node_92;
+    node_92 [label="TYPEREF"]
+    node_92 -> node_93;
+    node_93 [label="BUILTIN_TYPE"]
+    node_93 -> node_94;
+    node_94 [label="int"]
+    node_91 -> node_95;
+    node_95 [label="IDENTIFIER"]
+    node_95 -> node_96;
+    node_96 [label="varExample"]
+    node_91 -> node_97;
+    node_97 [label="INIT"]
+    node_97 -> node_98;
+    node_98 [label="varExample"]
+    node_90 -> node_99;
+    node_99 [label="DO_WHILE"]
+    node_99 -> node_100;
+    node_100 [label="BLOCK"]
+    node_100 -> node_101;
+    node_101 [label="VAR"]
+    node_101 -> node_102;
+    node_102 [label="TYPEREF"]
+    node_102 -> node_103;
+    node_103 [label="BUILTIN_TYPE"]
+    node_103 -> node_104;
+    node_104 [label="int"]
+    node_101 -> node_105;
+    node_105 [label="IDENTIFIER"]
+    node_105 -> node_106;
+    node_106 [label="varExample2"]
+    node_101 -> node_107;
+    node_107 [label="INIT"]
+    node_107 -> node_108;
+    node_108 [label="varExample2"]
+    node_99 -> node_109;
+    node_109 [label="EXPR"]
+    node_109 -> node_110;
+    node_110 [label="+"]
+    node_110 -> node_111;
+    node_111 [label="BOOL"]
+    node_111 -> node_112;
+    node_112 [label="true"]
+    node_110 -> node_113;
+    node_113 [label="BOOL"]
+    node_113 -> node_114;
+    node_114 [label="false"]
+}

@@ -1,0 +1,54 @@
+int main(string[] args) {
+    k = --a + c * -5 + !f + -k * 7 % (4 + 5);
+    int l = 5, s = 9, i;
+    Mybool b;
+    int[,,,] arr;
+    string st = "";
+    l = a;
+    arr[1] = 9;
+    arr[0] = k;
+    arr[l] = fuzz(true, 0, "testString");
+    arr[s + i * -7] = 0;
+    ret = buzz(k, a);
+    if(true) {
+        if (1 + d - 6) {
+           arr[3] = 9;
+        } else {
+            var = 1;
+            myType t;
+            if (1) {
+                buzz();
+                int t;
+            } else {
+                {
+                    fuzz();
+                    char k;
+                }
+            }
+        }
+    } else {
+        break;
+    }
+}
+
+myInt[] buzz() {
+    fuzz();
+    string test = "wasd";
+    var = --1 + c * -5 + !f;
+    var2 = --2 + c1 * -5 + !f;
+    while(a + 1 * -6) {
+        int wVar = 0;
+        wVar = 9 + 1;
+        bool[,,] bArr;
+        bArr[a[1]] = true;
+        do {
+            var = --1 + c * -5 + !f;
+        } while (true + false);
+    }
+}
+
+fuzz(bool b, int k, myType mt) {
+    string test = "wasd";
+    var = --1 + c * -5 + !f;
+    var2 = --2 + c1 * -5 + !f;
+}

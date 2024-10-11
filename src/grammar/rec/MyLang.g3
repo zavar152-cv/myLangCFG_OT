@@ -1,0 +1,270 @@
+grammar MyLang;
+
+options {
+    language=C;
+    output=AST;
+    ASTLabelType = pANTLR3_BASE_TREE;
+}
+
+tokens {
+    EXPR;
+    TERM;
+    BINARY_OP;
+    UNARY_OP;
+    BRACES;
+    PLACE;
+    LITERAL;
+    PLUS;
+    MINUS;
+    MUL;
+    ASSIGN;
+    NEG;
+    NOT;
+    BOOL;
+    STR;
+    SYMB;
+    HEX;
+    BITS;
+    DEC;
+    IDENTIFIER;
+    BUILTIN_TYPE;
+    CUSTOM_TYPE;
+    ARRAY;
+    SOURCE_ITEM;
+    VAR;
+    SOURCE;
+    TYPE;
+    LIST;
+    INIT;
+    ARRAY_SIZE;
+    CALL;
+    INDEXER;
+    PRIMARY;
+    TYPEREF;
+    BLOCK;
+    FUNC_SIGNATURE;
+    FUNC_DEF;
+    ARGDEF_LIST;
+    ARGDEF;
+    NAME;
+    BREAK;
+    FUNC_CALL;
+    EXPR_LIST;
+    INDEXING;
+    WHILE;
+    DO_WHILE;
+    IF;
+    ELSE;
+}
+
+source
+    :
+    sourceItem* EOF -> ^(SOURCE sourceItem*)
+    ;
+
+sourceItem
+    : funcSignature (statementBlock | ';') -> ^(FUNC_DEF funcSignature statementBlock?)
+    ;
+
+funcSignature
+    : typeRef? identifier '(' argDefList ')' -> ^(FUNC_SIGNATURE typeRef? ^(NAME identifier) argDefList)
+    ;
+
+argDefList
+    : (argDef (',' argDef)*)? -> ^(ARGDEF_LIST argDef*)
+    ;
+
+argDef
+    : typeRef? identifier -> ^(ARGDEF typeRef? ^(IDENTIFIER identifier))
+    ;
+
+statement
+    : var ';' -> var
+    | statementBlock -> statementBlock
+    | ifStatement -> ifStatement
+    | whileStatement -> whileStatement
+    | doWhileStatement -> doWhileStatement
+    | 'break' ';' -> ^(BREAK)
+    | exprStatement -> exprStatement
+    ;
+
+typeRef
+    : baseType array* -> ^(TYPEREF baseType array*)
+    ;
+
+var
+    : typeRef ((identifier ('=' expr)?) (',' (identifier ('=' expr)?))*) -> ^(VAR ^(typeRef) ^(IDENTIFIER identifier)* ^(INIT identifier expr)*)
+    ;
+
+//WTF is size?
+array
+    : '[' size+=(',')* ']' -> ^(ARRAY ^(ARRAY_SIZE $size*)?)
+    ;
+
+baseType
+    : builtinType -> ^(BUILTIN_TYPE builtinType)
+    | customType
+    ;
+
+builtinType
+    : boolType
+    | byteType
+    | intType
+    | uintType
+    | longType
+    | ulongType
+    | charType
+    | stringType
+    ;
+
+customType
+    : identifier -> ^(CUSTOM_TYPE identifier)
+    ;
+
+ifStatement
+    : 'if' '(' expr ')' statement ('else' statement)? -> ^(IF ^(EXPR expr) statement ^(ELSE statement)?)
+    ;
+
+statementBlock
+    : '{' statement* '}' -> ^(BLOCK statement*)
+    ;
+
+whileStatement
+    : 'while' '(' expr ')' statement -> ^(WHILE ^(EXPR expr) statement)
+    ;
+
+doWhileStatement
+    : 'do' statementBlock 'while' '(' expr ')' ';' -> ^(DO_WHILE statementBlock ^(EXPR expr))
+    ;
+
+exprStatement
+    : expr ';' -> ^(EXPR expr)
+    ;
+
+expr
+    : assignmentExpr
+    ;
+
+assignmentExpr
+    : addExpr (assign^ addExpr)?
+    ;
+
+addExpr
+    : mulExpr ((plus^ | minus^) mulExpr)*
+    ;
+
+mulExpr
+    : unaryExpr ((mul^ | divide^ | mod^) unaryExpr)*
+    ;
+
+unaryExpr
+    : unOp^ unaryExpr
+    | primary
+    ;
+
+primary
+    : braces
+    | funcCall
+    | indexing
+    | place
+    | literal
+    ;
+
+funcCall
+    : identifier '(' exprList? ')' -> ^(FUNC_CALL ^(NAME identifier) exprList?)
+    ;
+
+exprList
+    : expr (',' expr)* -> ^(EXPR_LIST expr+)
+    ;
+
+indexing
+    : identifier '[' exprList ']' -> ^(INDEXING identifier exprList)
+    ;
+
+braces
+    : '(' expr ')' -> expr
+    ;
+
+place
+    : identifier -> ^(IDENTIFIER identifier)
+    ;
+
+literal
+    : boolLit -> ^(BOOL boolLit)
+    | str -> ^(STR str)
+    | symb -> ^(SYMB symb)
+    | hex -> ^(HEX hex)
+    | bits -> ^(BITS bits)
+    | dec -> ^(DEC dec)
+    ;
+
+unOp
+    : minus -> NEG
+    | exclMark -> NOT
+    ;
+
+identifier: IDENTIFIER_TOKEN;
+
+str: STR_TOKEN;
+symb: CHAR_TOKEN;
+hex: HEX_TOKEN;
+bits: BITS_TOKEN;
+dec: DEC_TOKEN;
+boolLit: BOOL_TOKEN;
+minus: MINUS_TOKEN;
+exclMark: EXCL_MARK_TOKEN;
+plus: PLUS_TOKEN;
+mul: MUL_TOKEN;
+assign: ASSIGN_TOKEN;
+divide: DIV_TOKEN;
+mod: MOD_TOKEN;
+eq: EQ_TOKEN;
+neq: NEQ_TOKEN;
+le: LE_TOKEN;
+gr: GR_TOKEN;
+leEq: LE_EQ_TOKEN;
+grEq: GR_EQ_TOKEN;
+
+boolType: BOOL_TYPE;
+byteType: BYTE_TYPE;
+intType: INT_TYPE;
+uintType: UINT_TYPE;
+longType: LONG_TYPE;
+ulongType: ULONG_TYPE;
+charType: CHAR_TYPE;
+stringType: STRING_TYPE;
+
+MINUS_TOKEN: '-';
+EXCL_MARK_TOKEN: '!';
+PLUS_TOKEN: '+';
+MUL_TOKEN: '*';
+ASSIGN_TOKEN: '=';
+DIV_TOKEN: '/';
+MOD_TOKEN: '%';
+EQ_TOKEN: '==';
+NEQ_TOKEN: '!=';
+LE_TOKEN: '<';
+GR_TOKEN: '>';
+LE_EQ_TOKEN: '<=';
+GR_EQ_TOKEN: '>=';
+
+BOOL_TYPE: 'bool';
+BYTE_TYPE: 'byte';
+INT_TYPE: 'int';
+UINT_TYPE: 'uint';
+LONG_TYPE: 'long';
+ULONG_TYPE: 'ulong';
+CHAR_TYPE: 'char';
+STRING_TYPE: 'string';
+
+BOOL_TOKEN: ('true' | 'false') ;
+IDENTIFIER_TOKEN: (('a'..'z' | 'A'..'Z') | ('_')) (('a'..'z' | 'A'..'Z') | ('_') | ('0'..'9'))* ;
+BITS_TOKEN: '0' ('b'|'B') ('0' | '1')+ ;
+HEX_TOKEN: '0'('x'|'X') ('0'..'9' | 'a'..'f' | 'A'..'F')+ ;
+DEC_TOKEN: ('0'..'9')+ ;
+CHAR_TOKEN: '\'' ~('\'') '\'' ;
+STR_TOKEN: ('"') ('\\' . | ~('\\'|'"'))* ('"');
+
+NEWLINE:'\r'? '\n' { SKIP(); };
+WSS: (' '|'\t')+ { SKIP(); };

@@ -1,0 +1,11 @@
+int main(string[] args) {
+    int sampleVar;
+}
+
+myInt[] buzz() {
+    string sampleVar2 = "lol";
+}
+
+fuzz(bool b, int k, myType mt) {
+    bool isFunc = true;
+}

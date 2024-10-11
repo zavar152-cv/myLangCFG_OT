@@ -1,0 +1,70 @@
+[
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-g",
+      "-O0",
+      "-m64",
+      "-c",
+      "-Ibuild/_gen",
+      "-Isrc",
+      "-o",
+      "build/in/other.o",
+      "src/in/other.c"
+    ],
+    "directory": "/workspaces/sppo/lab-1",
+    "file": "/workspaces/sppo/lab-1/src/in/other.c",
+    "output": "/workspaces/sppo/lab-1/build/in/other.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-g",
+      "-O0",
+      "-m64",
+      "-c",
+      "-Ibuild/_gen",
+      "-Isrc",
+      "-o",
+      "build/main.o",
+      "src/main.c"
+    ],
+    "directory": "/workspaces/sppo/lab-1",
+    "file": "/workspaces/sppo/lab-1/src/main.c",
+    "output": "/workspaces/sppo/lab-1/build/main.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-g",
+      "-O0",
+      "-m64",
+      "-c",
+      "-Ibuild/_gen",
+      "-Isrc",
+      "-o",
+      "build/_gen/ExampleLexer.o",
+      "build/_gen/ExampleLexer.c"
+    ],
+    "directory": "/workspaces/sppo/lab-1",
+    "file": "/workspaces/sppo/lab-1/build/_gen/ExampleLexer.c",
+    "output": "/workspaces/sppo/lab-1/build/_gen/ExampleLexer.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-g",
+      "-O0",
+      "-m64",
+      "-c",
+      "-Ibuild/_gen",
+      "-Isrc",
+      "-o",
+      "build/_gen/ExampleParser.o",
+      "build/_gen/ExampleParser.c"
+    ],
+    "directory": "/workspaces/sppo/lab-1",
+    "file": "/workspaces/sppo/lab-1/build/_gen/ExampleParser.c",
+    "output": "/workspaces/sppo/lab-1/build/_gen/ExampleParser.o"
+  }
+]

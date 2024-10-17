@@ -57,6 +57,10 @@ tokens {
     ELSE;
 }
 
+@header {
+    #define _empty NULL
+}
+
 source
     :
     sourceItem* EOF -> ^(SOURCE sourceItem*)
@@ -163,23 +167,30 @@ unaryExpr
     ;
 
 primary
+    : atom (postfix^)*
+    ;
+
+atom
     : braces
-    | funcCall
-    | indexing
     | place
     | literal
     ;
 
-funcCall
-    : identifier '(' exprList? ')' -> ^(FUNC_CALL ^(NAME identifier) exprList?)
+postfix
+    : funcCallSuffix
+    | indexingSuffix
+    ;
+
+funcCallSuffix
+    : '(' exprList? ')' -> ^(FUNC_CALL exprList?)
+    ;
+
+indexingSuffix
+    : '[' exprList? ']' -> ^(INDEXING exprList?)
     ;
 
 exprList
     : expr (',' expr)* -> ^(EXPR_LIST expr+)
-    ;
-
-indexing
-    : identifier '[' exprList ']' -> ^(INDEXING identifier exprList)
     ;
 
 braces
@@ -190,7 +201,7 @@ place
     : identifier -> ^(IDENTIFIER identifier)
     ;
 
-literal
+literal 
     : boolLit -> ^(BOOL boolLit)
     | str -> ^(STR str)
     | symb -> ^(SYMB symb)

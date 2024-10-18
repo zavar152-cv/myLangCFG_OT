@@ -108,6 +108,7 @@ void freeBasicBlocks(BasicBlock *block) {
     BasicBlock *nextBlock = block->next;
     freeInstructions(block);
     freeEdges(block->outEdges);
+    free(block->name);
     free(block);
     block = nextBlock;
   }

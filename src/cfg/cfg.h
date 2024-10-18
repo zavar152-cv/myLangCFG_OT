@@ -1,5 +1,7 @@
 #pragma once
 
+#include "grammar/myLang.h"
+
 #define INITIAL_CAPACITY 4
 
 typedef enum {
@@ -62,6 +64,12 @@ typedef struct FunctionInfo {
     CFG *cfg;
     struct FunctionInfo *next;
 } FunctionInfo;
+
+typedef struct FilesToAnalyze {
+    uint32_t filesCount;
+    char **fileName;
+    MyLangResult **result;
+} FilesToAnalyze;
 
 BasicBlock* createBasicBlock(int id, BlockType type, const char *name);
 

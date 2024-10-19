@@ -15,7 +15,7 @@ FunctionNode* createFunctionNode(const char* name);
 
 CallGraph* createCallGraph();
 
-void addFunction(CallGraph* graph, FunctionNode* function);
+void addFunctionToCG(CallGraph* graph, FunctionNode* function);
 
 void addCall(FunctionNode* caller, FunctionNode* callee);
 

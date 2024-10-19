@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-typedef struct __attribute__((packed)) MyAstNode {
+typedef struct MyAstNode {
   struct MyAstNode **children;
   uint32_t childCount;
   const char *label;

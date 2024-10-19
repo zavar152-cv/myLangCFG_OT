@@ -90,13 +90,25 @@ int main(int argc, char *argv[]) {
     files.fileName = arguments.input_files;
 
     for (int i = 0; i < arguments.input_file_count; i++) {
-        printf("  %s\n", arguments.input_files[i]);
         MyLangResult *result = malloc(sizeof(MyLangResult));
         parseMyLangFromFile(result, arguments.input_files[i], arguments.debug);
         files.result[i] = result;
     }
 
-    for (int i = 0; i < files.filesCount; i++) {
+    Program* prog = buildProgram(&files, arguments.debug);
+
+    if (prog->errors != NULL) {
+        printf("Errors:\n");
+        ProgramErrorInfo *error = prog->errors;
+        while (error != NULL) {
+            printf("%s\n", error->message);
+            error = error->next;
+        }
+    }
+
+    freeProgram(prog);
+
+    for (uint32_t i = 0; i < files.filesCount; i++) {
         destroyMyLangResult(files.result[i]);
         free(files.result[i]);
     }

@@ -25,7 +25,7 @@ CallGraph *createCallGraph() {
   return graph;
 }
 
-void addFunction(CallGraph *graph, FunctionNode *function) {
+void addFunctionToCG(CallGraph *graph, FunctionNode *function) {
   if (graph->numFunctions >= graph->maxFunctions) {
     graph->maxFunctions *= 2;
     graph->functions = (FunctionNode **)realloc(

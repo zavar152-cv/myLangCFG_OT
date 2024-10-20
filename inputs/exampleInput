@@ -2,4 +2,65 @@ int main(string[] args) {
     int sampleInt;
     sampleInt = 1;
     bool sampleBool = true;
+    a[1];
+    a;
+    a();
+    true;
+    1;
+    1+1;
+    "str";
+
+    {
+        int k = 0;
+        int c;
+        {
+            sampleInt = 1;
+            bool sampleBool = true;
+            {
+                int k = 0;
+                int c;
+                int c;
+                int c;
+                o;
+            }
+        }
+    }
+
+    {
+        int k = 0;
+    }
+
+    if (true) {
+        int y;
+    } else {
+        int u;
+    }
+    
+    if (false) {
+        int y;
+    } else {
+        int u;
+    }
+
+    while (a + b) {
+        int b;
+        int y;
+        if (false) {
+            int y;
+        } else {
+            int u;
+            break;
+            call();
+        }
+        while (a + b) {
+            int f;
+            a = 8 + 9;
+            if (false) {
+                int y;
+                a = 9;
+            }
+            a = 9;
+        }
+    }
+
 }

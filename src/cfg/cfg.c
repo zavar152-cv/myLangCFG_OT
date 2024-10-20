@@ -1,11 +1,14 @@
 #include "cfg.h"
 #include <assert.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 #include "grammar/myLang.h"
+
+BasicBlock *parseBlock(MyAstNode* block, Program *program, const char* filename, bool isLoop, BasicBlock* prevBlock, BasicBlock* existingBlock, BasicBlock* loopBlock, CFG *cfg, uint32_t *uid);
 
 BasicBlock *createBasicBlock(int id, BlockType type, const char *name) {
   BasicBlock *block = (BasicBlock *)malloc(sizeof(BasicBlock));
@@ -18,6 +21,14 @@ BasicBlock *createBasicBlock(int id, BlockType type, const char *name) {
   block->outEdges = NULL;
   block->next = NULL;
   block->name = strdup(name);
+  block->isEmpty = false;
+  block->isBreak = false;
+  return block;
+}
+
+BasicBlock *createEmptyBasicBlock(int id, BlockType type, const char *name) {
+  BasicBlock *block = createBasicBlock(id, type, name);
+  block->isEmpty = true;
   return block;
 }
 
@@ -29,20 +40,27 @@ void addInstruction(BasicBlock *block, const char *text) {
   }
   block->instructions[block->instructionCount].text = strdup(text);
   block->instructionCount++;
+
+  if (block->isEmpty) {
+    block->isEmpty = false;
+  }
+
 }
 
 void addEdge(BasicBlock *from, BasicBlock *to, EdgeType type,
              const char *condition) {
-  Edge *edge = (Edge *)malloc(sizeof(Edge));
-  edge->type = type;
-  if (condition != NULL) {
-    edge->condition = strdup(condition);
-  } else {
-    edge->condition = NULL;
+  if (!from->isBreak) {
+    Edge *edge = (Edge *)malloc(sizeof(Edge));
+    edge->type = type;
+    if (condition != NULL) {
+      edge->condition = strdup(condition);
+    } else {
+      edge->condition = NULL;
+    }
+    edge->targetBlock = to;
+    edge->next = from->outEdges;
+    from->outEdges = edge;
   }
-  edge->targetBlock = to;
-  edge->next = from->outEdges;
-  from->outEdges = edge;
 }
 
 void addBasicBlock(CFG *cfg, BasicBlock *block) {
@@ -79,10 +97,203 @@ void parseArgdefList(MyAstNode* argdefList, FunctionInfo* info) {
   }
 }
 
+//TODO operation tree
+void parseVar(MyAstNode* var, BasicBlock *currentBlock, Program *program, const char* filename) {
+  assert(strcmp(var->children[0]->label, TYPEREF) == 0);
+
+  uint32_t varCount = (var->childCount - 1) / 2;
+
+  if (varCount == 1) {
+    //use DECLARE node
+  } else {
+    //use SEQ_DECLARE with childern type DECLARE
+    for (uint32_t i = 0; i < varCount; i++) {
+      var->children[i + 1]->label;     // ids
+      var->children[i + 1 + varCount]; // init
+    }
+  }
+
+  addInstruction(currentBlock, var->label);
+}
+
+//TODO operation tree
+void parseExpr(MyAstNode* expr, BasicBlock *currentBlock, Program *program, const char* filename) {
+  assert(strcmp(expr->label, EXPR) == 0);
+
+  if (strcmp(expr->children[0]->label, ASSIGN) == 0) {
+    //parse ASSIGN
+  } else if (strcmp(expr->children[0]->label, FUNC_CALL) == 0) {
+    //parse FUNC_CALL
+  } else if (strcmp(expr->children[0]->label, INDEXING) == 0) {
+    //parse INDEXING
+  } else {
+    char buffer[1024];
+    MyAstNode* temp = expr;
+    while (temp->childCount != 0) {
+      temp = temp->children[0];
+    }
+
+    snprintf(buffer, sizeof(buffer),
+             "Useless expression warning. Expression at %d:%d in file %s is useless\n",
+             temp->line, temp->pos + 1, filename);
+    ProgramWarningInfo *warning = createProgramWarningInfo(buffer);
+    addProgramWarning(program, warning);
+  }
+
+  addInstruction(currentBlock, expr->children[0]->label);
+}
+
+BasicBlock* parseWhile(MyAstNode* whileBlock, Program *program, const char* filename,
+                       BasicBlock* prevBlock, BasicBlock* existingBlock, CFG *cfg, uint32_t *uid) {
+    assert(strcmp(whileBlock->label, WHILE) == 0);
+
+    BasicBlock *conditionBlock;            
+    if (existingBlock == NULL) {
+      conditionBlock = createBasicBlock(++(*uid), CONDITIONAL, "While Condition");
+      addBasicBlock(cfg, conditionBlock);
+      addEdge(prevBlock, conditionBlock, UNCONDITIONAL_JUMP, NULL);
+    } else {
+      conditionBlock = existingBlock;
+      free(conditionBlock->name);
+      conditionBlock->name = strdup("While Condition");
+    }
+
+
+    BasicBlock *emptyBlock = createEmptyBasicBlock(++(*uid), UNCONDITIONAL, "Empty block");
+    addBasicBlock(cfg, emptyBlock);
+
+    //TODO operation tree for condition
+    addInstruction(conditionBlock, whileBlock->children[0]->label);
+
+    BasicBlock *bodyBlock = createBasicBlock(++(*uid), UNCONDITIONAL, "While Body");
+    addBasicBlock(cfg, bodyBlock);
+
+    addEdge(conditionBlock, bodyBlock, TRUE_CONDITION, NULL); //TODO
+    addEdge(conditionBlock, emptyBlock, FALSE_CONDITION, NULL); //TODO
+
+    BasicBlock *bodyExitBlock = parseBlock(whileBlock->children[1], program, filename, true, conditionBlock, bodyBlock, conditionBlock, cfg, uid);
+
+    addEdge(bodyExitBlock, conditionBlock, UNCONDITIONAL_JUMP, NULL);
+    return emptyBlock;
+}
+
+BasicBlock *parseIf(MyAstNode* ifBlock, Program *program, const char* filename, bool isLoop, BasicBlock* prevBlock, BasicBlock* existingBlock, BasicBlock* loopBlock, CFG *cfg, uint32_t *uid) {
+    assert(strcmp(ifBlock->label, IF) == 0);
+
+    BasicBlock *conditionBlock;
+    if (existingBlock == NULL) {
+      conditionBlock = createBasicBlock(++(*uid), CONDITIONAL, "If Condition");
+      addBasicBlock(cfg, conditionBlock);
+      addEdge(prevBlock, conditionBlock, UNCONDITIONAL_JUMP, NULL);
+    } else {
+      conditionBlock = existingBlock;
+      free(conditionBlock->name);
+      conditionBlock->name = strdup("If Condition");
+    }
+
+    BasicBlock *emptyBlock = createEmptyBasicBlock(++(*uid), UNCONDITIONAL, "Empty block");
+    addBasicBlock(cfg, emptyBlock);
+
+    //TODO operation tree for condition
+    addInstruction(conditionBlock, ifBlock->children[0]->label);
+
+    BasicBlock *thenBlock = createBasicBlock(++(*uid), UNCONDITIONAL, "Then Block");
+    addBasicBlock(cfg, thenBlock);
+
+    BasicBlock *elseBlock = NULL;
+    if (ifBlock->childCount == 3) {
+        assert(strcmp(ifBlock->children[2]->label, ELSE) == 0);
+        elseBlock = createBasicBlock(++(*uid), UNCONDITIONAL, "Else Block");
+        addBasicBlock(cfg, elseBlock);
+    }
+
+    addEdge(conditionBlock, thenBlock, TRUE_CONDITION, NULL); //TODO
+    if (elseBlock != NULL) {
+        addEdge(conditionBlock, elseBlock, FALSE_CONDITION, NULL); //TODO
+    } else {
+        addEdge(conditionBlock, emptyBlock, FALSE_CONDITION, NULL); //TODO
+    }
+
+    BasicBlock *thenExitBlock = parseBlock(ifBlock->children[1], program, filename, isLoop, conditionBlock, thenBlock, loopBlock, cfg, uid);
+
+    addEdge(thenExitBlock, emptyBlock, UNCONDITIONAL_JUMP, NULL);
+
+    if (elseBlock != NULL) {
+        BasicBlock *elseExitBlock = parseBlock(ifBlock->children[2]->children[0], program, filename, isLoop, conditionBlock, elseBlock, loopBlock, cfg, uid);
+        addEdge(elseExitBlock, emptyBlock, UNCONDITIONAL_JUMP, NULL);
+    }
+    return emptyBlock;
+}
+
+BasicBlock *parseBlock(MyAstNode* block, Program *program, const char* filename, bool isLoop, BasicBlock* prevBlock, BasicBlock* existingBlock, BasicBlock* loopBlock, CFG *cfg, uint32_t *uid) {
+  assert(strcmp(block->label, BLOCK) == 0);
+  BasicBlock *currentBlock;
+  if (existingBlock == NULL) {
+    currentBlock = createBasicBlock(++(*uid), UNCONDITIONAL, "Base block");
+    addBasicBlock(cfg, currentBlock);
+    addEdge(prevBlock, currentBlock, UNCONDITIONAL_JUMP, NULL);
+  } else {
+    currentBlock = existingBlock;
+  }
+
+  for (uint32_t i = 0; i < block->childCount; i++) {
+    if (currentBlock->isEmpty) {
+      free(currentBlock->name);
+      currentBlock->name = strdup("Base block");
+    }
+    if (strcmp(block->children[i]->label, VAR) == 0) {
+      parseVar(block->children[i], currentBlock, program, filename);
+    } else if (strcmp(block->children[i]->label, BLOCK) == 0) {
+      BasicBlock *toExistingBlock = currentBlock->isEmpty ? currentBlock : NULL;
+      BasicBlock *nestedExitBlock = parseBlock(block->children[i], program, filename, isLoop, currentBlock, toExistingBlock, loopBlock, cfg, uid);
+      currentBlock = nestedExitBlock;
+    } else if (strcmp(block->children[i]->label, IF) == 0) {
+      BasicBlock *toExistingBlock = currentBlock->isEmpty ? currentBlock : NULL;
+      BasicBlock *nestedExitBlock = parseIf(block->children[i], program, filename, isLoop, currentBlock, toExistingBlock, loopBlock, cfg, uid);
+      currentBlock = nestedExitBlock;
+    } else if (strcmp(block->children[i]->label, WHILE) == 0) {
+      BasicBlock *toExistingBlock = currentBlock->isEmpty ? currentBlock : NULL;
+      BasicBlock *nestedExitBlock = parseWhile(block->children[i], program, filename, currentBlock, toExistingBlock, cfg, uid);
+      currentBlock = nestedExitBlock;
+    } else if (strcmp(block->children[i]->label, DO_WHILE) == 0) {
+
+    } else if (strcmp(block->children[i]->label, BREAK) == 0) {
+      addInstruction(currentBlock, block->children[i]->children[0]->label);
+      if (isLoop) {
+        addEdge(currentBlock, loopBlock, UNCONDITIONAL_JUMP, NULL);
+        currentBlock->isBreak = true;
+        if (i < block->childCount - 1) {
+          char buffer[1024];
+
+          snprintf(buffer, sizeof(buffer),
+            "Control error. Unreachable code after break in %s at %d:%d\n",
+            filename, block->children[i]->children[0]->line, block->children[i]->children[0]->pos + 1);
+          ProgramErrorInfo* error = createProgramErrorInfo(buffer);
+          addProgramError(program, error);
+          break;
+        }
+      } else {
+        char buffer[1024];
+
+        snprintf(buffer, sizeof(buffer),
+          "Control error. Break in %s at %d:%d is out of loop\n",
+          filename, block->children[i]->children[0]->line, block->children[i]->children[0]->pos + 1);
+        ProgramErrorInfo* error = createProgramErrorInfo(buffer);
+        addProgramError(program, error);
+      }
+    } else if (strcmp(block->children[i]->label, EXPR) == 0) {
+      parseExpr(block->children[i], currentBlock, program, filename);
+    }
+  }
+
+  return currentBlock;
+}
+
 Program *buildProgram(FilesToAnalyze *files, bool debug) {
   Program *program = (Program *)malloc(sizeof(Program));
   program->functions = NULL;
   program->errors = NULL;
+  program->warnings = NULL;
 
   for (uint32_t i = 0; i < files->filesCount; i++) {
     MyLangResult* result = files->result[i];
@@ -130,7 +341,7 @@ Program *buildProgram(FilesToAnalyze *files, bool debug) {
 
           snprintf(buffer, sizeof(buffer),
             "Redeclaration error. Function %s at %d:%d in file %s was previously declared at %d:%d in file %s\n",
-            info->functionName, info->line, info->pos, info->fileName,
+            info->functionName, info->line, info->pos + 1, info->fileName,
             func->line, func->pos, func->fileName);
           ProgramErrorInfo* error = createProgramErrorInfo(buffer);
           addProgramError(program, error);
@@ -143,11 +354,49 @@ Program *buildProgram(FilesToAnalyze *files, bool debug) {
     }
   }
 
+  for (uint32_t i = 0; i < files->filesCount; i++) {
+    MyLangResult *result = files->result[i];
+    MyAstNode **funcDefs = result->tree->children;
+    uint32_t childCount = result->tree->childCount;
+    for (uint32_t j = 0; j < childCount; j++) {
+      MyAstNode *block = funcDefs[j]->children[1];
+      assert(strcmp(block->label, BLOCK) == 0);
+      CFG *cfg = createCFG();
+      uint32_t uid = 0;
+      BasicBlock *startBlock = createBasicBlock(uid, UNCONDITIONAL, "START");
+      cfg->entryBlock = startBlock;
+      addBasicBlock(cfg, startBlock);
+
+      BasicBlock *lastBlock = parseBlock(block, program, files->fileName[j], false, startBlock, NULL, NULL, cfg, &uid);
+      if (lastBlock->isEmpty) {
+        lastBlock->type = TERMINAL;
+        free(lastBlock->name);
+        lastBlock->name = strdup("END");
+      } else {
+        BasicBlock *endBlock = createBasicBlock(++uid, TERMINAL, "END");
+        addBasicBlock(cfg, endBlock);
+        addEdge(lastBlock, endBlock, UNCONDITIONAL_JUMP, NULL);
+      }
+      program->functions[j].cfg = cfg;
+    }
+  }
+
   if (debug) {
     FunctionInfo *func = program->functions;
     while (func != NULL) {
       printFunctionInfo(func);
+      char *newString = NULL;
+      size_t originalLength = strlen(func->functionName);
+      size_t suffixLength = strlen(".dot");
+      size_t totalLength = originalLength + suffixLength + 1;
+
+      newString = malloc(totalLength);
+      strcpy(newString, func->functionName);
+
+      strcat(newString, ".dot");
+      writeCFGToDotFile(func->cfg, newString);
       func = func->next;
+      free(newString);
     }
   }
 
@@ -324,6 +573,7 @@ void freeProgram(Program *program) {
     func = nextFunc;
   }
   freeProgramErrors(program->errors);
+  freeProgramWarnings(program->warnings);
   free(program);
 }
 
@@ -345,6 +595,27 @@ void freeProgramErrors(ProgramErrorInfo *error) {
         free(error->message);
         free(error);
         error = nextError;
+    }
+}
+
+ProgramWarningInfo* createProgramWarningInfo(const char *message) {
+    ProgramWarningInfo *warningInfo = (ProgramWarningInfo*)malloc(sizeof(ProgramWarningInfo));
+    warningInfo->message = strdup(message);
+    warningInfo->next = NULL;
+    return warningInfo;
+}
+
+void addProgramWarning(Program *program, ProgramWarningInfo *warningInfo) {
+    warningInfo->next = program->warnings;
+    program->warnings = warningInfo;
+}
+
+void freeProgramWarnings(ProgramWarningInfo *warning) {
+    while (warning != NULL) {
+        ProgramWarningInfo *nextWarning = warning->next;
+        free(warning->message);
+        free(warning);
+        warning = nextWarning;
     }
 }
 
@@ -373,3 +644,69 @@ void printFunctionInfo(FunctionInfo *funcInfo) {
   if (funcInfo->cfg != NULL)
     printCFG(funcInfo->cfg);
 }
+
+void writeCFGToDotFile(CFG *cfg, const char *filename) {
+    FILE *file = fopen(filename, "w");
+    if (file == NULL) {
+        fprintf(stderr, "Не удалось открыть файл %s для записи\n", filename);
+        return;
+    }
+
+    fprintf(file, "digraph CFG {\n");
+    fprintf(file, "    graph [splines=ortho];");
+    fprintf(file, "    node [shape=rectangle];\n\n");
+
+    BasicBlock *block = cfg->blocks;
+    while (block != NULL) {
+        char label[1024];
+        snprintf(label, sizeof(label), "BB%d, %s\\n", block->id, block->name);
+        for (int i = 0; i < block->instructionCount; i++) {
+            char instruction[256];
+            char *src = block->instructions[i].text;
+            char *dst = instruction;
+            while (*src && (dst - instruction) < 255) {
+                if (*src == '"' || *src == '\\') {
+                    *dst++ = '\\';
+                }
+                *dst++ = *src++;
+            }
+            *dst = '\0';
+            strncat(label, instruction, sizeof(label) - strlen(label) - 1);
+            strncat(label, "\\n", sizeof(label) - strlen(label) - 1);
+        }
+
+        fprintf(file, "    BB%d [label=\"%s\"];\n", block->id, label);
+
+        block = block->next;
+    }
+
+    fprintf(file, "\n");
+
+    block = cfg->blocks;
+    while (block != NULL) {
+        Edge *edge = block->outEdges;
+        while (edge != NULL) {
+            const char *edgeLabel = "";
+            switch (edge->type) {
+                case TRUE_CONDITION:
+                    edgeLabel = " [label=\"True\", color=green]";
+                    break;
+                case FALSE_CONDITION:
+                    edgeLabel = " [label=\"False\", color=red]";
+                    break;
+                case UNCONDITIONAL_JUMP:
+                    edgeLabel = "";
+                    break;
+            }
+            fprintf(file, "    BB%d -> BB%d%s;\n", block->id, edge->targetBlock->id, edgeLabel);
+            edge = edge->next;
+        }
+        block = block->next;
+    }
+
+    fprintf(file, "}\n");
+
+    fclose(file);
+}
+
+

@@ -12,7 +12,7 @@
 #define     PLUS "PLUS"
 #define     MINUS "MINUS"
 #define     MUL "MUL"
-#define     ASSIGN "ASSIGN"
+#define     ASSIGN "="
 #define     NEG "NEG"
 #define     NOT "NOT"
 #define     BOOL "BOOL"
@@ -62,7 +62,7 @@ typedef enum {
 typedef enum {
     TRUE_CONDITION,
     FALSE_CONDITION,
-    UNCONDITIONAL_JUMP
+    UNCONDITIONAL_JUMP,
 } EdgeType;
 
 typedef struct {
@@ -85,6 +85,8 @@ typedef struct BasicBlock {
     int instructionCount;
     int instructionCapacity;
     char *name;
+    bool isEmpty;
+    bool isBreak;
     Edge *outEdges;
     struct BasicBlock *next;
 } BasicBlock;
@@ -133,9 +135,15 @@ typedef struct __attribute__((packed)) ProgramErrorInfo {
     struct ProgramErrorInfo *next;
 } ProgramErrorInfo;
 
+typedef struct __attribute__((packed)) ProgramWarningInfo {
+    char *message;
+    struct ProgramWarningInfo *next;
+} ProgramWarningInfo;
+
 typedef struct Program {
     FunctionInfo *functions;
     ProgramErrorInfo *errors;
+    ProgramWarningInfo *warnings;
 } Program;
 
 BasicBlock* createBasicBlock(int id, BlockType type, const char *name);
@@ -186,3 +194,11 @@ ProgramErrorInfo* createProgramErrorInfo(const char *message);
 void addProgramError(Program *program, ProgramErrorInfo *errorInfo);
 
 void freeProgramErrors(ProgramErrorInfo *error);
+
+ProgramWarningInfo* createProgramWarningInfo(const char *message);
+
+void addProgramWarning(Program *program, ProgramWarningInfo *errorInfo);
+
+void freeProgramWarnings(ProgramWarningInfo *error);
+
+void writeCFGToDotFile(CFG *cfg, const char *filename);

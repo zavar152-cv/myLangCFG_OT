@@ -1,0 +1,58 @@
+digraph CFG {
+    graph [splines=ortho];    node [shape=rectangle];
+
+    BB23 [label="BB23, Then Block\nVAR\n=\n"];
+    BB22 [label="BB22, Base block\n=\n"];
+    BB21 [label="BB21, If Condition\nEXPR\n"];
+    BB20 [label="BB20, While Body\nVAR\n=\n"];
+    BB19 [label="BB19, Empty block\n"];
+    BB18 [label="BB18, Else Block\nVAR\nbreak\n"];
+    BB17 [label="BB17, Then Block\nVAR\n"];
+    BB16 [label="BB16, While Condition\nEXPR\n"];
+    BB15 [label="BB15, If Condition\nEXPR\n"];
+    BB14 [label="BB14, While Body\nVAR\nVAR\n"];
+    BB13 [label="BB13, END\n"];
+    BB12 [label="BB12, Else Block\nVAR\n"];
+    BB11 [label="BB11, Then Block\nVAR\n"];
+    BB10 [label="BB10, While Condition\nEXPR\n"];
+    BB9 [label="BB9, Else Block\nVAR\n"];
+    BB8 [label="BB8, Then Block\nVAR\n"];
+    BB7 [label="BB7, If Condition\nEXPR\n"];
+    BB6 [label="BB6, If Condition\nEXPR\n"];
+    BB5 [label="BB5, Base block\nVAR\n"];
+    BB4 [label="BB4, Base block\nVAR\nVAR\nVAR\nVAR\nIDENTIFIER\n"];
+    BB3 [label="BB3, Base block\n=\nVAR\n"];
+    BB2 [label="BB2, Base block\nVAR\nVAR\n"];
+    BB1 [label="BB1, Base block\nVAR\n=\nVAR\nINDEXING\nIDENTIFIER\nFUNC_CALL\nBOOL\nDEC\n+\nSTR\n"];
+    BB0 [label="BB0, START\n"];
+
+    BB23 -> BB22;
+    BB22 -> BB16;
+    BB21 -> BB22 [label="False", color=red];
+    BB21 -> BB23 [label="True", color=green];
+    BB20 -> BB21;
+    BB19 -> BB10;
+    BB18 -> BB10;
+    BB17 -> BB16;
+    BB16 -> BB19 [label="False", color=red];
+    BB16 -> BB20 [label="True", color=green];
+    BB15 -> BB18 [label="False", color=red];
+    BB15 -> BB17 [label="True", color=green];
+    BB14 -> BB15;
+    BB12 -> BB10;
+    BB11 -> BB10;
+    BB10 -> BB13 [label="False", color=red];
+    BB10 -> BB14 [label="True", color=green];
+    BB9 -> BB7;
+    BB8 -> BB7;
+    BB7 -> BB12 [label="False", color=red];
+    BB7 -> BB11 [label="True", color=green];
+    BB6 -> BB9 [label="False", color=red];
+    BB6 -> BB8 [label="True", color=green];
+    BB5 -> BB6;
+    BB4 -> BB5;
+    BB3 -> BB4;
+    BB2 -> BB3;
+    BB1 -> BB2;
+    BB0 -> BB1;
+}

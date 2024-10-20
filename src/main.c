@@ -106,6 +106,15 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    if (prog->warnings != NULL) {
+      printf("Warnings:\n");
+      ProgramWarningInfo *warning = prog->warnings;
+      while (warning != NULL) {
+        printf("%s\n", warning->message);
+        warning = warning->next;
+      }
+    }
+
     freeProgram(prog);
 
     for (uint32_t i = 0; i < files.filesCount; i++) {

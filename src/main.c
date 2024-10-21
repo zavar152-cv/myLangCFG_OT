@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <argp.h>
+#include <libgen.h>
 
 #include "grammar/myLang.h"
 #include "dotUtils/dotUtils.h"
@@ -55,6 +56,61 @@ static char args_doc[] = "INPUT_FILES...";
 static char doc[] = "CFG and CG builder from AST";
 
 static struct argp argp = { options, parse_opt, args_doc, doc };
+
+char *concat(char *original, char *suffix) {
+  char *newString = NULL;
+  size_t originalLength = strlen(original);
+  size_t suffixLength = strlen(suffix);
+  size_t totalLength = originalLength + suffixLength + 1;
+
+  newString = malloc(totalLength);
+  strcpy(newString, original);
+
+  strcat(newString, suffix);
+  return newString;
+}
+
+char* getFileNameWithoutExtension(const char* filePath) {
+    char *pathCopy = strdup(filePath);
+    char *baseName = basename(pathCopy);
+    char *dot = strrchr(baseName, '.');
+    if (dot != NULL) {
+        *dot = '\0';
+    }
+    char *result = strdup(baseName);
+    free(pathCopy);
+    return result;
+}
+
+char* getOutputFileName(const char* sourceFilePath, const char* functionName, const char* ext, const char* outputDir) {
+    char *sourceName = getFileNameWithoutExtension(sourceFilePath);
+    size_t totalLength = strlen(sourceName) + 1 + strlen(functionName) + 1 + strlen(ext) + 1;
+    char *fileName = (char*)malloc(totalLength);
+    snprintf(fileName, totalLength, "%s.%s.%s", sourceName, functionName, ext);
+
+    char *outputFilePath;
+    if (outputDir != NULL) {
+        size_t dirLength = strlen(outputDir);
+        if (outputDir[dirLength - 1] == '/') {
+            dirLength--;
+        }
+        size_t pathLength = dirLength + 1 + strlen(fileName) + 1;
+        outputFilePath = (char*)malloc(pathLength);
+        snprintf(outputFilePath, pathLength, "%.*s/%s", (int)dirLength, outputDir, fileName);
+    } else {
+        char *pathCopy = strdup(sourceFilePath);
+        char *dirName = dirname(pathCopy);
+        size_t pathLength = strlen(dirName) + 1 + strlen(fileName) + 1;
+        outputFilePath = (char*)malloc(pathLength);
+        snprintf(outputFilePath, pathLength, "%s/%s", dirName, fileName);
+        free(pathCopy);
+    }
+
+    free(sourceName);
+    free(fileName);
+
+    return outputFilePath;
+}
 
 int main(int argc, char *argv[]) {
 
@@ -120,18 +176,10 @@ int main(int argc, char *argv[]) {
 
     FunctionInfo *func = prog->functions;
     while (func != NULL) {
-      char *newString = NULL;
-      size_t originalLength = strlen(func->functionName);
-      size_t suffixLength = strlen(".dot");
-      size_t totalLength = originalLength + suffixLength + 1;
-
-      newString = malloc(totalLength);
-      strcpy(newString, func->functionName);
-
-      strcat(newString, ".dot");
-      writeCFGToDotFile(func->cfg, newString);
+      char *outputFilePath = getOutputFileName(func->fileName, func->functionName, "dot", arguments.output_dir);
+      writeCFGToDotFile(func->cfg, outputFilePath);
       func = func->next;
-      free(newString);
+      free(outputFilePath);
     }
 
     freeProgram(prog);
@@ -142,69 +190,6 @@ int main(int argc, char *argv[]) {
     }
     free(arguments.input_files);
     free(files.result);
-
-    // CFG *cfg = createCFG();
-
-    // BasicBlock *BB1 = createBasicBlock(1, CONDITIONAL, "BB1");
-    // BasicBlock *BB2 = createBasicBlock(2, CONDITIONAL, "BB2");
-    // BasicBlock *BB3 = createBasicBlock(3, CONDITIONAL, "BB3");
-    // BasicBlock *BB4 = createBasicBlock(4, UNCONDITIONAL, "BB4");
-    // BasicBlock *BB5 = createBasicBlock(5, CONDITIONAL, "BB5");
-    // BasicBlock *BB6 = createBasicBlock(6, UNCONDITIONAL, "BB6");
-    // BasicBlock *BB7 = createBasicBlock(7, UNCONDITIONAL, "BB7");
-    // BasicBlock *BB8 = createBasicBlock(8, UNCONDITIONAL, "BB8");
-    // BasicBlock *BB9 = createBasicBlock(9, CONDITIONAL, "BB9");
-    // BasicBlock *BB10 = createBasicBlock(10, UNCONDITIONAL, "BB10");
-    // BasicBlock *BB11 = createBasicBlock(11, UNCONDITIONAL, "BB11");
-    // BasicBlock *BB12 = createBasicBlock(12, TERMINAL, "BB12");
-
-    // addInstruction(BB1, "if (x > 0)");
-    // addInstruction(BB2, "while (x > 0)");
-    // addInstruction(BB3, "if (x % 2 == 0)");
-    // addInstruction(BB4, "x = x / 2;");
-    // addInstruction(BB5, "if (x % 3 == 0)");
-    // addInstruction(BB6, "x = x / 3;");
-    // addInstruction(BB7, "x = x - 1;");
-    // addInstruction(BB8, "x += 2;");
-    // addInstruction(BB9, "if (x < 0)");
-    // addInstruction(BB10, "x = 100;");
-    // addInstruction(BB11, "printf(\"Result: %d\\n\", x);");
-
-    // addBasicBlock(cfg, BB12);
-    // addBasicBlock(cfg, BB11);
-    // addBasicBlock(cfg, BB10);
-    // addBasicBlock(cfg, BB9);
-    // addBasicBlock(cfg, BB8);
-    // addBasicBlock(cfg, BB7);
-    // addBasicBlock(cfg, BB6);
-    // addBasicBlock(cfg, BB5);
-    // addBasicBlock(cfg, BB4);
-    // addBasicBlock(cfg, BB3);
-    // addBasicBlock(cfg, BB2);
-    // addBasicBlock(cfg, BB1);
-
-    // cfg->entryBlock = BB1;
-
-    // addEdge(BB1, BB2, TRUE_CONDITION, "x > 0");
-    // addEdge(BB1, BB9, FALSE_CONDITION, "x > 0");
-    // addEdge(BB2, BB3, TRUE_CONDITION, "x > 0");
-    // addEdge(BB2, BB11, FALSE_CONDITION, "x > 0");
-    // addEdge(BB3, BB4, TRUE_CONDITION, "x % 2 == 0");
-    // addEdge(BB3, BB5, FALSE_CONDITION, "x % 2 == 0");
-    // addEdge(BB4, BB2, UNCONDITIONAL_JUMP, NULL);
-    // addEdge(BB5, BB6, TRUE_CONDITION, "x % 3 == 0");
-    // addEdge(BB5, BB7, FALSE_CONDITION, "x % 3 == 0");
-    // addEdge(BB6, BB2, UNCONDITIONAL_JUMP, NULL);
-    // addEdge(BB7, BB2, UNCONDITIONAL_JUMP, NULL);
-    // addEdge(BB9, BB8, TRUE_CONDITION, "x < 0");
-    // addEdge(BB9, BB10, FALSE_CONDITION, "x < 0");
-    // addEdge(BB8, BB9, UNCONDITIONAL_JUMP, NULL);
-    // addEdge(BB10, BB11, UNCONDITIONAL_JUMP, NULL);
-    // addEdge(BB11, BB12, UNCONDITIONAL_JUMP, NULL);
-
-    // printCFG(cfg);
-
-    // freeCFG(cfg);
 
     // CallGraph* graph = createCallGraph();
 

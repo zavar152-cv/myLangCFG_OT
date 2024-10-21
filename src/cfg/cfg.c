@@ -173,7 +173,7 @@ BasicBlock* parseDoWhile(MyAstNode* doWhileBlock, Program *program, const char* 
   addEdge(conditionBlock, bodyBlock, TRUE_CONDITION, NULL);   // TODO
   addEdge(conditionBlock, emptyBlock, FALSE_CONDITION, NULL); // TODO
 
-  BasicBlock *bodyExitBlock = parseBlock(doWhileBlock->children[0], program, filename, true, conditionBlock, bodyBlock, conditionBlock, cfg, uid);
+  BasicBlock *bodyExitBlock = parseBlock(doWhileBlock->children[0], program, filename, true, conditionBlock, bodyBlock, emptyBlock, cfg, uid);
 
   addEdge(bodyExitBlock, conditionBlock, UNCONDITIONAL_JUMP, NULL);
   return emptyBlock;
@@ -206,13 +206,13 @@ BasicBlock* parseWhile(MyAstNode* whileBlock, Program *program, const char* file
     addEdge(conditionBlock, bodyBlock, TRUE_CONDITION, NULL); //TODO
     addEdge(conditionBlock, emptyBlock, FALSE_CONDITION, NULL); //TODO
 
-    BasicBlock *bodyExitBlock = parseBlock(whileBlock->children[1], program, filename, true, conditionBlock, bodyBlock, conditionBlock, cfg, uid);
+    BasicBlock *bodyExitBlock = parseBlock(whileBlock->children[1], program, filename, true, conditionBlock, bodyBlock, emptyBlock, cfg, uid);
 
     addEdge(bodyExitBlock, conditionBlock, UNCONDITIONAL_JUMP, NULL);
     return emptyBlock;
 }
 
-BasicBlock *parseIf(MyAstNode* ifBlock, Program *program, const char* filename, bool isLoop, BasicBlock* prevBlock, BasicBlock* existingBlock, BasicBlock* loopBlock, CFG *cfg, uint32_t *uid) {
+BasicBlock *parseIf(MyAstNode* ifBlock, Program *program, const char* filename, bool isLoop, BasicBlock* prevBlock, BasicBlock* existingBlock, BasicBlock* loopExitBlock, CFG *cfg, uint32_t *uid) {
     assert(strcmp(ifBlock->label, IF) == 0);
 
     BasicBlock *conditionBlock;
@@ -249,18 +249,18 @@ BasicBlock *parseIf(MyAstNode* ifBlock, Program *program, const char* filename, 
         addEdge(conditionBlock, emptyBlock, FALSE_CONDITION, NULL); //TODO
     }
 
-    BasicBlock *thenExitBlock = parseBlock(ifBlock->children[1], program, filename, isLoop, conditionBlock, thenBlock, loopBlock, cfg, uid);
+    BasicBlock *thenExitBlock = parseBlock(ifBlock->children[1], program, filename, isLoop, conditionBlock, thenBlock, loopExitBlock, cfg, uid);
 
     addEdge(thenExitBlock, emptyBlock, UNCONDITIONAL_JUMP, NULL);
 
     if (elseBlock != NULL) {
-        BasicBlock *elseExitBlock = parseBlock(ifBlock->children[2]->children[0], program, filename, isLoop, conditionBlock, elseBlock, loopBlock, cfg, uid);
+        BasicBlock *elseExitBlock = parseBlock(ifBlock->children[2]->children[0], program, filename, isLoop, conditionBlock, elseBlock, loopExitBlock, cfg, uid);
         addEdge(elseExitBlock, emptyBlock, UNCONDITIONAL_JUMP, NULL);
     }
     return emptyBlock;
 }
 
-BasicBlock *parseBlock(MyAstNode* block, Program *program, const char* filename, bool isLoop, BasicBlock* prevBlock, BasicBlock* existingBlock, BasicBlock* loopBlock, CFG *cfg, uint32_t *uid) {
+BasicBlock *parseBlock(MyAstNode* block, Program *program, const char* filename, bool isLoop, BasicBlock* prevBlock, BasicBlock* existingBlock, BasicBlock* loopExitBlock, CFG *cfg, uint32_t *uid) {
   assert(strcmp(block->label, BLOCK) == 0);
   BasicBlock *currentBlock;
   if (existingBlock == NULL) {
@@ -280,11 +280,11 @@ BasicBlock *parseBlock(MyAstNode* block, Program *program, const char* filename,
       parseVar(block->children[i], currentBlock, program, filename);
     } else if (strcmp(block->children[i]->label, BLOCK) == 0) {
       BasicBlock *toExistingBlock = currentBlock->isEmpty ? currentBlock : NULL;
-      BasicBlock *nestedExitBlock = parseBlock(block->children[i], program, filename, isLoop, currentBlock, toExistingBlock, loopBlock, cfg, uid);
+      BasicBlock *nestedExitBlock = parseBlock(block->children[i], program, filename, isLoop, currentBlock, toExistingBlock, loopExitBlock, cfg, uid);
       currentBlock = nestedExitBlock;
     } else if (strcmp(block->children[i]->label, IF) == 0) {
       BasicBlock *toExistingBlock = currentBlock->isEmpty ? currentBlock : NULL;
-      BasicBlock *nestedExitBlock = parseIf(block->children[i], program, filename, isLoop, currentBlock, toExistingBlock, loopBlock, cfg, uid);
+      BasicBlock *nestedExitBlock = parseIf(block->children[i], program, filename, isLoop, currentBlock, toExistingBlock, loopExitBlock, cfg, uid);
       currentBlock = nestedExitBlock;
     } else if (strcmp(block->children[i]->label, WHILE) == 0) {
       BasicBlock *toExistingBlock = currentBlock->isEmpty ? currentBlock : NULL;
@@ -297,7 +297,7 @@ BasicBlock *parseBlock(MyAstNode* block, Program *program, const char* filename,
     } else if (strcmp(block->children[i]->label, BREAK) == 0) {
       addInstruction(currentBlock, block->children[i]->children[0]->label);
       if (isLoop) {
-        addEdge(currentBlock, loopBlock, UNCONDITIONAL_JUMP, NULL);
+        addEdge(currentBlock, loopExitBlock, UNCONDITIONAL_JUMP, NULL);
         currentBlock->isBreak = true;
         if (i < block->childCount - 1) {
           char buffer[1024];

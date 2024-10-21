@@ -54,6 +54,7 @@ int main(string[] args) {
             } else {
                 int u;
                 call();
+                break;
             }
             while (a + b) {
                 int f;
@@ -65,6 +66,9 @@ int main(string[] args) {
                 a = 9;
             }
         }
+        check();
+        int k;
+        break;
     } while (true);
 
 }

@@ -1,5 +1,5 @@
 digraph CFG {
-    graph [splines=line];    node [shape=rectangle];
+    graph [splines=true];    node [shape=rectangle];
 
     BB2 [label=<<B>BB2: END</B><BR ALIGN="CENTER"/>>];
     BB1 [label=<<B>BB1: Base block</B><BR ALIGN="CENTER"/>VAR<BR ALIGN="CENTER"/>>];

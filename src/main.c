@@ -127,13 +127,6 @@ int main(int argc, char *argv[]) {
         printf("Debug output is enabled\n");
     }
 
-    if (arguments.output_dir) {
-        printf("Output directory: %s\n", arguments.output_dir);
-    } else {
-        printf("Output directory isn't provided\n");
-        return 0;
-    }
-
     printf("Input files:\n");
     for (int i = 0; i < arguments.input_file_count; i++) {
         printf("  %s\n", arguments.input_files[i]);

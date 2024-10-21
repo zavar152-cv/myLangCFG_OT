@@ -57,9 +57,14 @@ void addEdge(BasicBlock *from, BasicBlock *to, EdgeType type,
     } else {
       edge->condition = NULL;
     }
+    edge->fromBlock = from;
     edge->targetBlock = to;
-    edge->next = from->outEdges;
+
+    edge->nextOut = from->outEdges;
     from->outEdges = edge;
+
+    edge->nextIn = to->inEdges;
+    to->inEdges = edge;
   }
 }
 
@@ -143,8 +148,38 @@ void parseExpr(MyAstNode* expr, BasicBlock *currentBlock, Program *program, cons
   addInstruction(currentBlock, expr->children[0]->label);
 }
 
-BasicBlock* parseWhile(MyAstNode* whileBlock, Program *program, const char* filename,
-                       BasicBlock* prevBlock, BasicBlock* existingBlock, CFG *cfg, uint32_t *uid) {
+BasicBlock* parseDoWhile(MyAstNode* doWhileBlock, Program *program, const char* filename, BasicBlock* prevBlock, BasicBlock* existingBlock, CFG *cfg, uint32_t *uid) {
+  assert(strcmp(doWhileBlock->label, DO_WHILE) == 0);
+  BasicBlock *bodyBlock;
+  if (existingBlock == NULL) {
+    bodyBlock = createBasicBlock(++(*uid), CONDITIONAL, "Do While body");
+    addBasicBlock(cfg, bodyBlock);
+    addEdge(prevBlock, bodyBlock, UNCONDITIONAL_JUMP, NULL);
+  } else {
+    bodyBlock = existingBlock;
+    free(bodyBlock->name);
+    bodyBlock->name = strdup("Do While body");
+  }
+
+  BasicBlock *emptyBlock = createEmptyBasicBlock(++(*uid), UNCONDITIONAL, "Empty block");
+  addBasicBlock(cfg, emptyBlock);
+
+  BasicBlock *conditionBlock = createBasicBlock(++(*uid), CONDITIONAL, "Do While Condition");
+  addBasicBlock(cfg, conditionBlock);
+
+  //TODO operation tree for condition
+  addInstruction(conditionBlock, doWhileBlock->children[1]->label);
+
+  addEdge(conditionBlock, bodyBlock, TRUE_CONDITION, NULL);   // TODO
+  addEdge(conditionBlock, emptyBlock, FALSE_CONDITION, NULL); // TODO
+
+  BasicBlock *bodyExitBlock = parseBlock(doWhileBlock->children[0], program, filename, true, conditionBlock, bodyBlock, conditionBlock, cfg, uid);
+
+  addEdge(bodyExitBlock, conditionBlock, UNCONDITIONAL_JUMP, NULL);
+  return emptyBlock;
+}
+
+BasicBlock* parseWhile(MyAstNode* whileBlock, Program *program, const char* filename, BasicBlock* prevBlock, BasicBlock* existingBlock, CFG *cfg, uint32_t *uid) {
     assert(strcmp(whileBlock->label, WHILE) == 0);
 
     BasicBlock *conditionBlock;            
@@ -256,7 +291,9 @@ BasicBlock *parseBlock(MyAstNode* block, Program *program, const char* filename,
       BasicBlock *nestedExitBlock = parseWhile(block->children[i], program, filename, currentBlock, toExistingBlock, cfg, uid);
       currentBlock = nestedExitBlock;
     } else if (strcmp(block->children[i]->label, DO_WHILE) == 0) {
-
+      BasicBlock *toExistingBlock = currentBlock->isEmpty ? currentBlock : NULL;
+      BasicBlock *nestedExitBlock = parseDoWhile(block->children[i], program, filename, currentBlock, toExistingBlock, cfg, uid);
+      currentBlock = nestedExitBlock;      
     } else if (strcmp(block->children[i]->label, BREAK) == 0) {
       addInstruction(currentBlock, block->children[i]->children[0]->label);
       if (isLoop) {
@@ -361,13 +398,23 @@ Program *buildProgram(FilesToAnalyze *files, bool debug) {
     for (uint32_t j = 0; j < childCount; j++) {
       MyAstNode *block = funcDefs[j]->children[1];
       assert(strcmp(block->label, BLOCK) == 0);
+      MyAstNode* funcSignature = funcDefs[j]->children[0];
+      assert(strcmp(funcSignature->label, FUNC_SIGNATURE) == 0);
+      MyAstNode* name;
+      if (funcSignature->childCount == 2) {
+        name = funcSignature->children[0];
+        assert(strcmp(name->label, NAME) == 0);
+      } else if (funcSignature->childCount == 3) {
+        name = funcSignature->children[1];
+        assert(strcmp(name->label, NAME) == 0);
+      }
       CFG *cfg = createCFG();
       uint32_t uid = 0;
       BasicBlock *startBlock = createBasicBlock(uid, UNCONDITIONAL, "START");
       cfg->entryBlock = startBlock;
       addBasicBlock(cfg, startBlock);
 
-      BasicBlock *lastBlock = parseBlock(block, program, files->fileName[j], false, startBlock, NULL, NULL, cfg, &uid);
+      BasicBlock *lastBlock = parseBlock(block, program, files->fileName[i], false, startBlock, NULL, NULL, cfg, &uid);
       if (lastBlock->isEmpty) {
         lastBlock->type = TERMINAL;
         free(lastBlock->name);
@@ -377,7 +424,13 @@ Program *buildProgram(FilesToAnalyze *files, bool debug) {
         addBasicBlock(cfg, endBlock);
         addEdge(lastBlock, endBlock, UNCONDITIONAL_JUMP, NULL);
       }
-      program->functions[j].cfg = cfg;
+      FunctionInfo *func = program->functions;
+      while (func != NULL) {
+        if (strcmp(func->functionName, name->children[0]->label) == 0) {
+          func->cfg = cfg;
+        }
+        func = func->next;
+      }
     }
   }
 
@@ -385,18 +438,7 @@ Program *buildProgram(FilesToAnalyze *files, bool debug) {
     FunctionInfo *func = program->functions;
     while (func != NULL) {
       printFunctionInfo(func);
-      char *newString = NULL;
-      size_t originalLength = strlen(func->functionName);
-      size_t suffixLength = strlen(".dot");
-      size_t totalLength = originalLength + suffixLength + 1;
-
-      newString = malloc(totalLength);
-      strcpy(newString, func->functionName);
-
-      strcat(newString, ".dot");
-      writeCFGToDotFile(func->cfg, newString);
       func = func->next;
-      free(newString);
     }
   }
 
@@ -435,7 +477,7 @@ void printCFG(CFG *cfg) {
         break;
       }
       printf("\n");
-      edge = edge->next;
+      edge = edge->nextOut;
     }
     printf("\n");
     block = block->next;
@@ -449,9 +491,9 @@ void freeInstructions(BasicBlock *block) {
   free(block->instructions);
 }
 
-void freeEdges(Edge *edge) {
+void freeOutEdges(Edge *edge) {
   while (edge != NULL) {
-    Edge *nextEdge = edge->next;
+    Edge *nextEdge = edge->nextOut;
     if (edge->condition != NULL) {
       free(edge->condition);
     }
@@ -464,7 +506,8 @@ void freeBasicBlocks(BasicBlock *block) {
   while (block != NULL) {
     BasicBlock *nextBlock = block->next;
     freeInstructions(block);
-    freeEdges(block->outEdges);
+    freeOutEdges(block->outEdges);
+    block->inEdges = NULL;
     free(block->name);
     free(block);
     block = nextBlock;
@@ -653,30 +696,44 @@ void writeCFGToDotFile(CFG *cfg, const char *filename) {
     }
 
     fprintf(file, "digraph CFG {\n");
-    fprintf(file, "    graph [splines=ortho];");
+    fprintf(file, "    graph [splines=true];");
     fprintf(file, "    node [shape=rectangle];\n\n");
 
     BasicBlock *block = cfg->blocks;
     while (block != NULL) {
-        char label[1024];
-        snprintf(label, sizeof(label), "BB%d, %s\\n", block->id, block->name);
+        fprintf(file, "    BB%d [label=<", block->id);
+        fprintf(file, "<B>BB%d: %s</B><BR ALIGN=\"CENTER\"/>", block->id, block->name);
+
         for (int i = 0; i < block->instructionCount; i++) {
             char instruction[256];
             char *src = block->instructions[i].text;
             char *dst = instruction;
             while (*src && (dst - instruction) < 255) {
-                if (*src == '"' || *src == '\\') {
-                    *dst++ = '\\';
+                if (*src == '<') {
+                    *dst++ = '&';
+                    *dst++ = 'l';
+                    *dst++ = 't';
+                    *dst++ = ';';
+                } else if (*src == '>') {
+                    *dst++ = '&';
+                    *dst++ = 'g';
+                    *dst++ = 't';
+                    *dst++ = ';';
+                } else if (*src == '&') {
+                    *dst++ = '&';
+                    *dst++ = 'a';
+                    *dst++ = 'm';
+                    *dst++ = 'p';
+                    *dst++ = ';';
+                } else {
+                    *dst++ = *src;
                 }
-                *dst++ = *src++;
+                src++;
             }
             *dst = '\0';
-            strncat(label, instruction, sizeof(label) - strlen(label) - 1);
-            strncat(label, "\\n", sizeof(label) - strlen(label) - 1);
+            fprintf(file, "%s<BR ALIGN=\"CENTER\"/>", instruction);
         }
-
-        fprintf(file, "    BB%d [label=\"%s\"];\n", block->id, label);
-
+        fprintf(file, ">];\n");
         block = block->next;
     }
 
@@ -699,7 +756,7 @@ void writeCFGToDotFile(CFG *cfg, const char *filename) {
                     break;
             }
             fprintf(file, "    BB%d -> BB%d%s;\n", block->id, edge->targetBlock->id, edgeLabel);
-            edge = edge->next;
+            edge = edge->nextOut;
         }
         block = block->next;
     }
@@ -708,5 +765,3 @@ void writeCFGToDotFile(CFG *cfg, const char *filename) {
 
     fclose(file);
 }
-
-

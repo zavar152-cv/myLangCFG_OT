@@ -92,6 +92,9 @@ int main(int argc, char *argv[]) {
     for (int i = 0; i < arguments.input_file_count; i++) {
         MyLangResult *result = malloc(sizeof(MyLangResult));
         parseMyLangFromFile(result, arguments.input_files[i], arguments.debug);
+        if (!result->isValid && arguments.debug) {
+            printErrors(&result->errorContext);
+        } 
         files.result[i] = result;
     }
 
@@ -113,6 +116,22 @@ int main(int argc, char *argv[]) {
         printf("%s\n", warning->message);
         warning = warning->next;
       }
+    }
+
+    FunctionInfo *func = prog->functions;
+    while (func != NULL) {
+      char *newString = NULL;
+      size_t originalLength = strlen(func->functionName);
+      size_t suffixLength = strlen(".dot");
+      size_t totalLength = originalLength + suffixLength + 1;
+
+      newString = malloc(totalLength);
+      strcpy(newString, func->functionName);
+
+      strcat(newString, ".dot");
+      writeCFGToDotFile(func->cfg, newString);
+      func = func->next;
+      free(newString);
     }
 
     freeProgram(prog);

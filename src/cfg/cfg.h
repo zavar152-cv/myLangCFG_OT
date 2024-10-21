@@ -71,11 +71,13 @@ typedef struct {
 
 struct BasicBlock;
 
-typedef struct Edge {
+typedef struct __attribute__((packed)) Edge {
     EdgeType type;
     char *condition; // NULL for unconditional
+    struct BasicBlock *fromBlock;
     struct BasicBlock *targetBlock;
-    struct Edge *next;
+    struct Edge *nextOut;
+    struct Edge *nextIn;
 } Edge;
 
 typedef struct BasicBlock {
@@ -88,6 +90,7 @@ typedef struct BasicBlock {
     bool isEmpty;
     bool isBreak;
     Edge *outEdges;
+    Edge *inEdges;
     struct BasicBlock *next;
 } BasicBlock;
 
@@ -161,7 +164,7 @@ void printCFG(CFG *cfg);
 
 void freeInstructions(BasicBlock *block);
 
-void freeEdges(Edge *edge);
+void freeOutEdges(Edge *edge);
 
 void freeBasicBlocks(BasicBlock *block);
 

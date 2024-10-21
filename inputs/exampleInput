@@ -42,25 +42,33 @@ int main(string[] args) {
         int u;
     }
 
-    while (a + b) {
-        int b;
+
+
+    do {
         int y;
-        if (false) {
-            int y;
-        } else {
-            int u;
-            break;
-            call();
-        }
         while (a + b) {
-            int f;
-            a = 8 + 9;
+            int b;
+            int y;
             if (false) {
                 int y;
+            } else {
+                int u;
+                call();
+            }
+            while (a + b) {
+                int f;
+                a = 8 + 9;
+                if (false) {
+                    int y;
+                    a = 9;
+                }
                 a = 9;
             }
-            a = 9;
         }
-    }
+    } while (true);
 
+}
+
+int test(string[] args) {
+    int l;
 }

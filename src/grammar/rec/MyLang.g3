@@ -211,8 +211,8 @@ literal
     ;
 
 unOp
-    : minus -> NEG
-    | exclMark -> NOT
+    : minus
+    | exclMark
     ;
 
 identifier: IDENTIFIER_TOKEN;

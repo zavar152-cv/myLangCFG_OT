@@ -30,7 +30,7 @@ int main(string[] args) {
         int k = 0;
     }
 
-    if (true) {
+    if (a + 4) {
         int y;
     } else {
         int u;

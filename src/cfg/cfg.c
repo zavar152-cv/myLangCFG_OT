@@ -1,4 +1,5 @@
 #include "cfg.h"
+#include "ot/ot.h"
 #include <assert.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -32,13 +33,14 @@ BasicBlock *createEmptyBasicBlock(int id, BlockType type, const char *name) {
   return block;
 }
 
-void addInstruction(BasicBlock *block, const char *text) {
+void addInstruction(BasicBlock *block, const char *text, OperationTreeNode *otRoot) {
   if (block->instructionCount >= block->instructionCapacity) {
     block->instructionCapacity *= 2;
     block->instructions = (Instruction *)realloc(
         block->instructions, sizeof(Instruction) * block->instructionCapacity);
   }
   block->instructions[block->instructionCount].text = strdup(text);
+  block->instructions[block->instructionCount].otRoot = otRoot;
   block->instructionCount++;
 
   if (block->isEmpty) {
@@ -118,34 +120,24 @@ void parseVar(MyAstNode* var, BasicBlock *currentBlock, Program *program, const 
     }
   }
 
-  addInstruction(currentBlock, var->label);
+  addInstruction(currentBlock, var->label, NULL);
 }
 
-//TODO operation tree
 void parseExpr(MyAstNode* expr, BasicBlock *currentBlock, Program *program, const char* filename) {
   assert(strcmp(expr->label, EXPR) == 0);
+  OperationTreeErrorContainer *errorContainer = (OperationTreeErrorContainer*)malloc(sizeof(OperationTreeErrorContainer));
+  errorContainer->error = NULL;
+  OperationTreeNode *otNode = buildExprOperationTreeFromAstNode(expr->children[0], false, false, errorContainer, filename);
+  addInstruction(currentBlock, expr->children[0]->label, otNode);
 
-  if (strcmp(expr->children[0]->label, ASSIGN) == 0) {
-    //parse ASSIGN
-  } else if (strcmp(expr->children[0]->label, FUNC_CALL) == 0) {
-    //parse FUNC_CALL
-  } else if (strcmp(expr->children[0]->label, INDEXING) == 0) {
-    //parse INDEXING
-  } else {
-    char buffer[1024];
-    MyAstNode* temp = expr;
-    while (temp->childCount != 0) {
-      temp = temp->children[0];
-    }
-
-    snprintf(buffer, sizeof(buffer),
-             "Useless expression warning. Expression at %d:%d in file %s is useless\n",
-             temp->line, temp->pos + 1, filename);
-    ProgramWarningInfo *warning = createProgramWarningInfo(buffer);
-    addProgramWarning(program, warning);
+  OperationTreeErrorInfo *errorInfo = errorContainer->error;
+  while (errorInfo != NULL) {
+    ProgramErrorInfo* error = createProgramErrorInfo(errorInfo->message);
+    addProgramError(program, error);
+    errorInfo = errorInfo->next;
   }
-
-  addInstruction(currentBlock, expr->children[0]->label);
+  freeOperationTreeErrors(errorContainer->error);
+  free(errorContainer);
 }
 
 BasicBlock* parseDoWhile(MyAstNode* doWhileBlock, Program *program, const char* filename, BasicBlock* prevBlock, BasicBlock* existingBlock, CFG *cfg, uint32_t *uid) {
@@ -167,8 +159,19 @@ BasicBlock* parseDoWhile(MyAstNode* doWhileBlock, Program *program, const char* 
   BasicBlock *conditionBlock = createBasicBlock(++(*uid), CONDITIONAL, "Do While Condition");
   addBasicBlock(cfg, conditionBlock);
 
-  //TODO operation tree for condition
-  addInstruction(conditionBlock, doWhileBlock->children[1]->label);
+  OperationTreeErrorContainer *errorContainer = (OperationTreeErrorContainer*)malloc(sizeof(OperationTreeErrorContainer));
+  errorContainer->error = NULL;
+  OperationTreeNode *otNode = buildExprOperationTreeFromAstNode(doWhileBlock->children[1]->children[0], false, false, errorContainer, filename);
+  addInstruction(conditionBlock, doWhileBlock->children[1]->label, otNode);
+
+  OperationTreeErrorInfo *errorInfo = errorContainer->error;
+  while (errorInfo != NULL) {
+    ProgramErrorInfo* error = createProgramErrorInfo(errorInfo->message);
+    addProgramError(program, error);
+    errorInfo = errorInfo->next;
+  }
+  freeOperationTreeErrors(errorContainer->error);
+  free(errorContainer);
 
   addEdge(conditionBlock, bodyBlock, TRUE_CONDITION, NULL);   // TODO
   addEdge(conditionBlock, emptyBlock, FALSE_CONDITION, NULL); // TODO
@@ -197,8 +200,19 @@ BasicBlock* parseWhile(MyAstNode* whileBlock, Program *program, const char* file
     BasicBlock *emptyBlock = createEmptyBasicBlock(++(*uid), UNCONDITIONAL, "Empty block");
     addBasicBlock(cfg, emptyBlock);
 
-    //TODO operation tree for condition
-    addInstruction(conditionBlock, whileBlock->children[0]->label);
+    OperationTreeErrorContainer *errorContainer = (OperationTreeErrorContainer*)malloc(sizeof(OperationTreeErrorContainer));
+    errorContainer->error = NULL;
+    OperationTreeNode *otNode = buildExprOperationTreeFromAstNode(whileBlock->children[0]->children[0], false, false, errorContainer, filename);
+    addInstruction(conditionBlock, whileBlock->children[0]->label, otNode);
+
+    OperationTreeErrorInfo *errorInfo = errorContainer->error;
+    while (errorInfo != NULL) {
+      ProgramErrorInfo* error = createProgramErrorInfo(errorInfo->message);
+      addProgramError(program, error);
+      errorInfo = errorInfo->next;
+    }
+    freeOperationTreeErrors(errorContainer->error);
+    free(errorContainer);
 
     BasicBlock *bodyBlock = createBasicBlock(++(*uid), UNCONDITIONAL, "While Body");
     addBasicBlock(cfg, bodyBlock);
@@ -229,8 +243,19 @@ BasicBlock *parseIf(MyAstNode* ifBlock, Program *program, const char* filename, 
     BasicBlock *emptyBlock = createEmptyBasicBlock(++(*uid), UNCONDITIONAL, "Empty block");
     addBasicBlock(cfg, emptyBlock);
 
-    //TODO operation tree for condition
-    addInstruction(conditionBlock, ifBlock->children[0]->label);
+    OperationTreeErrorContainer *errorContainer = (OperationTreeErrorContainer*)malloc(sizeof(OperationTreeErrorContainer));
+    errorContainer->error = NULL;
+    OperationTreeNode *otNode = buildExprOperationTreeFromAstNode(ifBlock->children[0]->children[0], false, false, errorContainer, filename);
+    addInstruction(conditionBlock, ifBlock->children[0]->label, otNode);
+
+    OperationTreeErrorInfo *errorInfo = errorContainer->error;
+    while (errorInfo != NULL) {
+      ProgramErrorInfo* error = createProgramErrorInfo(errorInfo->message);
+      addProgramError(program, error);
+      errorInfo = errorInfo->next;
+    }
+    freeOperationTreeErrors(errorContainer->error);
+    free(errorContainer);
 
     BasicBlock *thenBlock = createBasicBlock(++(*uid), UNCONDITIONAL, "Then Block");
     addBasicBlock(cfg, thenBlock);
@@ -295,7 +320,7 @@ BasicBlock *parseBlock(MyAstNode* block, Program *program, const char* filename,
       BasicBlock *nestedExitBlock = parseDoWhile(block->children[i], program, filename, currentBlock, toExistingBlock, cfg, uid);
       currentBlock = nestedExitBlock;      
     } else if (strcmp(block->children[i]->label, BREAK) == 0) {
-      addInstruction(currentBlock, block->children[i]->children[0]->label);
+      addInstruction(currentBlock, block->children[i]->children[0]->label, NULL);
       if (isLoop) {
         addEdge(currentBlock, loopExitBlock, UNCONDITIONAL_JUMP, NULL);
         currentBlock->isBreak = true;
@@ -303,7 +328,7 @@ BasicBlock *parseBlock(MyAstNode* block, Program *program, const char* filename,
           char buffer[1024];
 
           snprintf(buffer, sizeof(buffer),
-            "Control error. Unreachable code after break in %s at %d:%d\n",
+            "Control error. Unreachable code after break at %s:%d:%d\n",
             filename, block->children[i]->children[0]->line, block->children[i]->children[0]->pos + 1);
           ProgramErrorInfo* error = createProgramErrorInfo(buffer);
           addProgramError(program, error);
@@ -313,7 +338,7 @@ BasicBlock *parseBlock(MyAstNode* block, Program *program, const char* filename,
         char buffer[1024];
 
         snprintf(buffer, sizeof(buffer),
-          "Control error. Break in %s at %d:%d is out of loop\n",
+          "Control error. Break at %s:%d:%d is out of loop\n",
           filename, block->children[i]->children[0]->line, block->children[i]->children[0]->pos + 1);
         ProgramErrorInfo* error = createProgramErrorInfo(buffer);
         addProgramError(program, error);
@@ -377,9 +402,9 @@ Program *buildProgram(FilesToAnalyze *files, bool debug) {
           char buffer[1024];
 
           snprintf(buffer, sizeof(buffer),
-            "Redeclaration error. Function %s at %d:%d in file %s was previously declared at %d:%d in file %s\n",
-            info->functionName, info->line, info->pos + 1, info->fileName,
-            func->line, func->pos, func->fileName);
+            "Redeclaration error. Function %s at %s:%d:%d was previously declared at %s:%d:%d\n",
+            info->functionName, info->fileName, info->line, info->pos + 1,
+            func->fileName, func->line, func->pos);
           ProgramErrorInfo* error = createProgramErrorInfo(buffer);
           addProgramError(program, error);
           break;
@@ -460,7 +485,11 @@ void printCFG(CFG *cfg) {
            : (block->type == UNCONDITIONAL) ? "безусловный"
                                             : "терминальный");
     for (int i = 0; i < block->instructionCount; i++) {
-      printf("  Инструкция %d: %s\n", i, block->instructions[i].text);
+      printf("  Инструкция %d: %s\nДерево операций:\n", i, block->instructions[i].text);
+      if (block->instructions[i].otRoot != NULL) {
+        printOperationTree(block->instructions[i].otRoot);
+      }
+      printf("\n");
     }
     Edge *edge = block->outEdges;
     while (edge != NULL) {
@@ -487,6 +516,8 @@ void printCFG(CFG *cfg) {
 void freeInstructions(BasicBlock *block) {
   for (int i = 0; i < block->instructionCount; i++) {
     free(block->instructions[i].text);
+    if (block->instructions[i].otRoot != NULL)
+      destroyOperationTreeNodeTree(block->instructions[i].otRoot);
   }
   free(block->instructions);
 }

@@ -719,6 +719,58 @@ void printFunctionInfo(FunctionInfo *funcInfo) {
     printCFG(funcInfo->cfg);
 }
 
+void writeOperationTreeToDot(FILE *file, OperationTreeNode *node, int *nodeCounter) {
+    if (node == NULL) {
+        return;
+    }
+
+    // Уникальный идентификатор для узла
+    int currentNodeId = (*nodeCounter)++;
+    
+    // Экранируем символы в метке узла
+    char escapedLabel[256];
+    const char *src = node->label;
+    char *dst = escapedLabel;
+    while (*src && (dst - escapedLabel) < 255) {
+        if (*src == '<') {
+            *dst++ = '&';
+            *dst++ = 'l';
+            *dst++ = 't';
+            *dst++ = ';';
+        } else if (*src == '>') {
+            *dst++ = '&';
+            *dst++ = 'g';
+            *dst++ = 't';
+            *dst++ = ';';
+        } else if (*src == '&') {
+            *dst++ = '&';
+            *dst++ = 'a';
+            *dst++ = 'm';
+            *dst++ = 'p';
+            *dst++ = ';';
+        } else if (*src == '"') {
+            *dst++ = '\\';
+            *dst++ = '"';
+        } else {
+            *dst++ = *src;
+        }
+        src++;
+    }
+    *dst = '\0';
+
+    // Выводим узел с экранированной меткой
+    fprintf(file, "        node%d [label=\"%s\"];\n", currentNodeId, escapedLabel);
+
+    // Рекурсивно выводим детей
+    for (uint32_t i = 0; i < node->childCount; i++) {
+        int childNodeId = *nodeCounter;
+        writeOperationTreeToDot(file, node->children[i], nodeCounter);
+
+        // Выводим ребро от текущего узла к дочернему узлу
+        fprintf(file, "        node%d -> node%d;\n", currentNodeId, childNodeId);
+    }
+}
+
 void writeCFGToDotFile(CFG *cfg, const char *filename) {
     FILE *file = fopen(filename, "w");
     if (file == NULL) {
@@ -731,11 +783,15 @@ void writeCFGToDotFile(CFG *cfg, const char *filename) {
     fprintf(file, "    node [shape=rectangle];\n\n");
 
     BasicBlock *block = cfg->blocks;
+    int nodeCounter = 0; // Уникальный счётчик для узлов графа
+
     while (block != NULL) {
+        // Выводим блок и его инструкции
         fprintf(file, "    BB%d [label=<", block->id);
         fprintf(file, "<B>BB%d: %s</B><BR ALIGN=\"CENTER\"/>", block->id, block->name);
 
         for (int i = 0; i < block->instructionCount; i++) {
+            // Экранируем спецсимволы в инструкции
             char instruction[256];
             char *src = block->instructions[i].text;
             char *dst = instruction;
@@ -756,6 +812,9 @@ void writeCFGToDotFile(CFG *cfg, const char *filename) {
                     *dst++ = 'm';
                     *dst++ = 'p';
                     *dst++ = ';';
+                } else if (*src == '"') {
+                    *dst++ = '\\';
+                    *dst++ = '"';
                 } else {
                     *dst++ = *src;
                 }
@@ -764,12 +823,30 @@ void writeCFGToDotFile(CFG *cfg, const char *filename) {
             *dst = '\0';
             fprintf(file, "%s<BR ALIGN=\"CENTER\"/>", instruction);
         }
+
         fprintf(file, ">];\n");
+
+        // Выводим подграф для каждой инструкции
+        for (int i = 0; i < block->instructionCount; i++) {
+            if (block->instructions[i].otRoot != NULL) {
+                // Начало подграфа
+                fprintf(file, "    subgraph cluster_instruction%d {\n", nodeCounter);
+                fprintf(file, "        label = \"Operation Tree of BB%d:%d\";\n", block->id, i);
+
+                // Выводим дерево операций
+                writeOperationTreeToDot(file, block->instructions[i].otRoot, &nodeCounter);
+
+                // Закрытие подграфа
+                fprintf(file, "    }\n");
+            }
+        }
+
         block = block->next;
     }
 
     fprintf(file, "\n");
 
+    // Выводим рёбра между блоками
     block = cfg->blocks;
     while (block != NULL) {
         Edge *edge = block->outEdges;

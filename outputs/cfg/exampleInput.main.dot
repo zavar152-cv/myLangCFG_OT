@@ -2,18 +2,122 @@ digraph CFG {
     graph [splines=true];    node [shape=rectangle];
 
     BB26 [label=<<B>BB26: Then Block</B><BR ALIGN="CENTER"/>VAR<BR ALIGN="CENTER"/>=<BR ALIGN="CENTER"/>>];
+    subgraph cluster_instruction0 {
+        label = "Operation Tree of BB26:1";
+        node0 [label="write"];
+        node1 [label="a"];
+        node0 -> node1;
+        node2 [label="litRead"];
+        node3 [label="DEC"];
+        node2 -> node3;
+        node4 [label="9"];
+        node2 -> node4;
+        node0 -> node2;
+    }
     BB25 [label=<<B>BB25: Base block</B><BR ALIGN="CENTER"/>=<BR ALIGN="CENTER"/>>];
+    subgraph cluster_instruction5 {
+        label = "Operation Tree of BB25:0";
+        node5 [label="write"];
+        node6 [label="a"];
+        node5 -> node6;
+        node7 [label="litRead"];
+        node8 [label="DEC"];
+        node7 -> node8;
+        node9 [label="9"];
+        node7 -> node9;
+        node5 -> node7;
+    }
     BB24 [label=<<B>BB24: If Condition</B><BR ALIGN="CENTER"/>EXPR<BR ALIGN="CENTER"/>>];
+    subgraph cluster_instruction10 {
+        label = "Operation Tree of BB24:0";
+        node10 [label="litRead"];
+        node11 [label="BOOL"];
+        node10 -> node11;
+        node12 [label="false"];
+        node10 -> node12;
+    }
     BB23 [label=<<B>BB23: While Body</B><BR ALIGN="CENTER"/>VAR<BR ALIGN="CENTER"/>=<BR ALIGN="CENTER"/>>];
+    subgraph cluster_instruction13 {
+        label = "Operation Tree of BB23:1";
+        node13 [label="write"];
+        node14 [label="a"];
+        node13 -> node14;
+        node15 [label="+"];
+        node16 [label="litRead"];
+        node17 [label="DEC"];
+        node16 -> node17;
+        node18 [label="8"];
+        node16 -> node18;
+        node15 -> node16;
+        node19 [label="litRead"];
+        node20 [label="DEC"];
+        node19 -> node20;
+        node21 [label="9"];
+        node19 -> node21;
+        node15 -> node19;
+        node13 -> node15;
+    }
     BB22 [label=<<B>BB22: Empty block</B><BR ALIGN="CENTER"/>>];
     BB21 [label=<<B>BB21: Else Block</B><BR ALIGN="CENTER"/>VAR<BR ALIGN="CENTER"/>FUNC_CALL<BR ALIGN="CENTER"/>break<BR ALIGN="CENTER"/>>];
+    subgraph cluster_instruction22 {
+        label = "Operation Tree of BB21:1";
+        node22 [label="CALL"];
+        node23 [label="call"];
+        node22 -> node23;
+    }
     BB20 [label=<<B>BB20: Then Block</B><BR ALIGN="CENTER"/>VAR<BR ALIGN="CENTER"/>>];
     BB19 [label=<<B>BB19: While Condition</B><BR ALIGN="CENTER"/>EXPR<BR ALIGN="CENTER"/>>];
+    subgraph cluster_instruction24 {
+        label = "Operation Tree of BB19:0";
+        node24 [label="+"];
+        node25 [label="read"];
+        node26 [label="a"];
+        node25 -> node26;
+        node24 -> node25;
+        node27 [label="read"];
+        node28 [label="b"];
+        node27 -> node28;
+        node24 -> node27;
+    }
     BB18 [label=<<B>BB18: If Condition</B><BR ALIGN="CENTER"/>EXPR<BR ALIGN="CENTER"/>>];
+    subgraph cluster_instruction29 {
+        label = "Operation Tree of BB18:0";
+        node29 [label="litRead"];
+        node30 [label="BOOL"];
+        node29 -> node30;
+        node31 [label="false"];
+        node29 -> node31;
+    }
     BB17 [label=<<B>BB17: While Body</B><BR ALIGN="CENTER"/>VAR<BR ALIGN="CENTER"/>VAR<BR ALIGN="CENTER"/>>];
     BB16 [label=<<B>BB16: Base block</B><BR ALIGN="CENTER"/>FUNC_CALL<BR ALIGN="CENTER"/>VAR<BR ALIGN="CENTER"/>break<BR ALIGN="CENTER"/>>];
+    subgraph cluster_instruction32 {
+        label = "Operation Tree of BB16:0";
+        node32 [label="CALL"];
+        node33 [label="check"];
+        node32 -> node33;
+    }
     BB15 [label=<<B>BB15: While Condition</B><BR ALIGN="CENTER"/>EXPR<BR ALIGN="CENTER"/>>];
+    subgraph cluster_instruction34 {
+        label = "Operation Tree of BB15:0";
+        node34 [label="+"];
+        node35 [label="read"];
+        node36 [label="a"];
+        node35 -> node36;
+        node34 -> node35;
+        node37 [label="read"];
+        node38 [label="b"];
+        node37 -> node38;
+        node34 -> node37;
+    }
     BB14 [label=<<B>BB14: Do While Condition</B><BR ALIGN="CENTER"/>EXPR<BR ALIGN="CENTER"/>>];
+    subgraph cluster_instruction39 {
+        label = "Operation Tree of BB14:0";
+        node39 [label="litRead"];
+        node40 [label="BOOL"];
+        node39 -> node40;
+        node41 [label="true"];
+        node39 -> node41;
+    }
     BB13 [label=<<B>BB13: END</B><BR ALIGN="CENTER"/>>];
     BB12 [label=<<B>BB12: Else Block</B><BR ALIGN="CENTER"/>VAR<BR ALIGN="CENTER"/>>];
     BB11 [label=<<B>BB11: Then Block</B><BR ALIGN="CENTER"/>VAR<BR ALIGN="CENTER"/>>];
@@ -21,12 +125,128 @@ digraph CFG {
     BB9 [label=<<B>BB9: Else Block</B><BR ALIGN="CENTER"/>VAR<BR ALIGN="CENTER"/>>];
     BB8 [label=<<B>BB8: Then Block</B><BR ALIGN="CENTER"/>VAR<BR ALIGN="CENTER"/>>];
     BB7 [label=<<B>BB7: If Condition</B><BR ALIGN="CENTER"/>EXPR<BR ALIGN="CENTER"/>>];
+    subgraph cluster_instruction42 {
+        label = "Operation Tree of BB7:0";
+        node42 [label="litRead"];
+        node43 [label="BOOL"];
+        node42 -> node43;
+        node44 [label="false"];
+        node42 -> node44;
+    }
     BB6 [label=<<B>BB6: If Condition</B><BR ALIGN="CENTER"/>EXPR<BR ALIGN="CENTER"/>>];
+    subgraph cluster_instruction45 {
+        label = "Operation Tree of BB6:0";
+        node45 [label="+"];
+        node46 [label="read"];
+        node47 [label="a"];
+        node46 -> node47;
+        node45 -> node46;
+        node48 [label="litRead"];
+        node49 [label="DEC"];
+        node48 -> node49;
+        node50 [label="4"];
+        node48 -> node50;
+        node45 -> node48;
+    }
     BB5 [label=<<B>BB5: Base block</B><BR ALIGN="CENTER"/>VAR<BR ALIGN="CENTER"/>>];
     BB4 [label=<<B>BB4: Base block</B><BR ALIGN="CENTER"/>VAR<BR ALIGN="CENTER"/>VAR<BR ALIGN="CENTER"/>VAR<BR ALIGN="CENTER"/>VAR<BR ALIGN="CENTER"/>IDENTIFIER<BR ALIGN="CENTER"/>>];
+    subgraph cluster_instruction51 {
+        label = "Operation Tree of BB4:4";
+        node51 [label="read"];
+        node52 [label="o"];
+        node51 -> node52;
+    }
     BB3 [label=<<B>BB3: Base block</B><BR ALIGN="CENTER"/>=<BR ALIGN="CENTER"/>VAR<BR ALIGN="CENTER"/>>];
+    subgraph cluster_instruction53 {
+        label = "Operation Tree of BB3:0";
+        node53 [label="write"];
+        node54 [label="sampleInt"];
+        node53 -> node54;
+        node55 [label="litRead"];
+        node56 [label="DEC"];
+        node55 -> node56;
+        node57 [label="1"];
+        node55 -> node57;
+        node53 -> node55;
+    }
     BB2 [label=<<B>BB2: Base block</B><BR ALIGN="CENTER"/>VAR<BR ALIGN="CENTER"/>VAR<BR ALIGN="CENTER"/>>];
     BB1 [label=<<B>BB1: Base block</B><BR ALIGN="CENTER"/>VAR<BR ALIGN="CENTER"/>=<BR ALIGN="CENTER"/>VAR<BR ALIGN="CENTER"/>INDEXING<BR ALIGN="CENTER"/>IDENTIFIER<BR ALIGN="CENTER"/>FUNC_CALL<BR ALIGN="CENTER"/>BOOL<BR ALIGN="CENTER"/>DEC<BR ALIGN="CENTER"/>+<BR ALIGN="CENTER"/>STR<BR ALIGN="CENTER"/>>];
+    subgraph cluster_instruction58 {
+        label = "Operation Tree of BB1:1";
+        node58 [label="write"];
+        node59 [label="sampleInt"];
+        node58 -> node59;
+        node60 [label="litRead"];
+        node61 [label="DEC"];
+        node60 -> node61;
+        node62 [label="1"];
+        node60 -> node62;
+        node58 -> node60;
+    }
+    subgraph cluster_instruction63 {
+        label = "Operation Tree of BB1:3";
+        node63 [label="index"];
+        node64 [label="a"];
+        node63 -> node64;
+        node65 [label="litRead"];
+        node66 [label="DEC"];
+        node65 -> node66;
+        node67 [label="1"];
+        node65 -> node67;
+        node63 -> node65;
+    }
+    subgraph cluster_instruction68 {
+        label = "Operation Tree of BB1:4";
+        node68 [label="read"];
+        node69 [label="a"];
+        node68 -> node69;
+    }
+    subgraph cluster_instruction70 {
+        label = "Operation Tree of BB1:5";
+        node70 [label="CALL"];
+        node71 [label="a"];
+        node70 -> node71;
+    }
+    subgraph cluster_instruction72 {
+        label = "Operation Tree of BB1:6";
+        node72 [label="litRead"];
+        node73 [label="BOOL"];
+        node72 -> node73;
+        node74 [label="true"];
+        node72 -> node74;
+    }
+    subgraph cluster_instruction75 {
+        label = "Operation Tree of BB1:7";
+        node75 [label="litRead"];
+        node76 [label="DEC"];
+        node75 -> node76;
+        node77 [label="1"];
+        node75 -> node77;
+    }
+    subgraph cluster_instruction78 {
+        label = "Operation Tree of BB1:8";
+        node78 [label="+"];
+        node79 [label="litRead"];
+        node80 [label="DEC"];
+        node79 -> node80;
+        node81 [label="1"];
+        node79 -> node81;
+        node78 -> node79;
+        node82 [label="litRead"];
+        node83 [label="DEC"];
+        node82 -> node83;
+        node84 [label="1"];
+        node82 -> node84;
+        node78 -> node82;
+    }
+    subgraph cluster_instruction85 {
+        label = "Operation Tree of BB1:9";
+        node85 [label="litRead"];
+        node86 [label="STR"];
+        node85 -> node86;
+        node87 [label="\"str\""];
+        node85 -> node87;
+    }
     BB0 [label=<<B>BB0: START</B><BR ALIGN="CENTER"/>>];
 
     BB26 -> BB25;

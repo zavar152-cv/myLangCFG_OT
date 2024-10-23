@@ -176,7 +176,7 @@ digraph CFG {
         style=rounded;
         color=blue;
         entry8 [shape=point, style=invis];
-        node59 [label="CALL", color=blue];
+        node59 [label="call", color=blue];
         node60 [label="b", color=blue];
         node59 -> node60[color=blue];
         node61 [label="read", color=blue];
@@ -209,8 +209,8 @@ digraph CFG {
         color=blue;
         entry9 [shape=point, style=invis];
         node72 [label="write", color=blue];
-        node73 [label="CALL", color=blue];
-        node74 [label="CALL", color=blue];
+        node73 [label="call", color=blue];
+        node74 [label="call", color=blue];
         node75 [label="call", color=blue];
         node76 [label="buzz", color=blue];
         node75 -> node76[color=blue];
@@ -245,7 +245,7 @@ digraph CFG {
         color=blue;
         entry10 [shape=point, style=invis];
         node87 [label="call", color=blue];
-        node88 [label="CALL", color=blue];
+        node88 [label="call", color=blue];
         node89 [label="test", color=blue];
         node88 -> node89[color=blue];
         node90 [label="read", color=blue];

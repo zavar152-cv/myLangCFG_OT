@@ -13,3 +13,4 @@ int main(string[] args) {
     a[1] = 5;
     a[b, (1+2)] = p[];
 }
+

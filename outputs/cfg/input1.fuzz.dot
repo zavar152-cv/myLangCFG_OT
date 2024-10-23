@@ -4,7 +4,7 @@ digraph CFG {
     node [shape=rectangle];
 
     BB2 [label=<<B>BB2: END</B><BR ALIGN="CENTER"/>>];
-    BB1 [label=<<B>BB1: Base block</B><BR ALIGN="CENTER"/>FUNC_CALL<BR ALIGN="CENTER"/>VAR<BR ALIGN="CENTER"/>>];
+    BB1 [label=<<B>BB1: Base block</B><BR ALIGN="CENTER"/>FUNC_CALL<BR ALIGN="CENTER"/>VAR<BR ALIGN="CENTER"/>DEC<BR ALIGN="CENTER"/>>];
     subgraph cluster_instruction0 {
         label = "OT of BB1:0";
         style=rounded;
@@ -54,7 +54,7 @@ digraph CFG {
         node17 -> node18[color=blue];
         node19 [label="+", color=blue];
         node20 [label="call", color=blue];
-        node21 [label="main2", color=blue];
+        node21 [label="main", color=blue];
         node20 -> node21[color=blue];
         node19 -> node20[color=blue];
         node22 [label="litRead", color=blue];
@@ -67,6 +67,20 @@ digraph CFG {
         node12 -> node17[color=blue];
     }
     BB1 -> entry1 [lhead=cluster_instruction1, color=blue];
+    subgraph cluster_instruction2 {
+        label = "OT of BB1:2";
+        style=rounded;
+        color=blue;
+        entry2 [shape=point, style=invis];
+        node25 [label="return", color=blue];
+        node26 [label="litRead", color=blue];
+        node27 [label="DEC", color=blue];
+        node26 -> node27[color=blue];
+        node28 [label="0", color=blue];
+        node26 -> node28[color=blue];
+        node25 -> node26[color=blue];
+    }
+    BB1 -> entry2 [lhead=cluster_instruction2, color=blue];
     BB0 [label=<<B>BB0: START</B><BR ALIGN="CENTER"/>>];
 
     BB1 -> BB2;

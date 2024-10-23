@@ -69,7 +69,6 @@ int main(string[] args) {
         }
         check();
         int k;
-        break;
     } while (true);
 
 }

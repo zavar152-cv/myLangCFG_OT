@@ -1,0 +1,16 @@
+int main2(string[] args) {
+    fuzz2(true, 0, "testString");
+    0;
+}
+
+bool buzz2() {
+    fuzz();
+    a[1];
+}
+
+fuzz2(bool b, int k, myType mt) {
+    (buzz(k)(a))(s, k);
+    int k = main() + 1;
+    buzz2;
+    0;
+}

@@ -9,4 +9,5 @@ int main(string[] args) {
     !b;
     int k;
     k = 9;
+    0;
 }

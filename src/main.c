@@ -206,7 +206,7 @@ int main(int argc, char *argv[]) {
     FunctionInfo *func = prog->functions;
     const char *mainFileName = NULL;
     while (func != NULL) {
-      if (strcmp(func->functionName, "main")) {
+      if (strcmp(func->functionName, "main") == 0) {
         mainFileName = func->fileName;
       }
       char *outputFilePath = getOutputFileName(func->fileName, func->functionName, "dot", arguments.output_dir);

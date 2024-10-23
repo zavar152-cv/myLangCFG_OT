@@ -764,7 +764,7 @@ void writeOperationTreeToDot(FILE *file, OperationTreeNode *node, int *nodeCount
     }
 }
 
-void writeCFGToDotFile(CFG *cfg, const char *filename) {
+void writeCFGToDotFile(CFG *cfg, const char *filename, bool drawOt) {
     FILE *file = fopen(filename, "w");
     if (file == NULL) {
         fprintf(stderr, "Can't open file %s to write\n", filename);
@@ -819,25 +819,27 @@ void writeCFGToDotFile(CFG *cfg, const char *filename) {
 
         fprintf(file, ">];\n");
 
-        for (int i = 0; i < block->instructionCount; i++) {
-            if (block->instructions[i].otRoot != NULL) {
-                fprintf(file, "    subgraph cluster_instruction%d {\n", clusterCounter);
-                fprintf(file, "        label = \"OT of BB%d:%d\";\n", block->id, i);
-                fprintf(file, "        style=rounded;\n");
-                fprintf(file, "        color=blue;\n");
+        if (drawOt) {
+          for (int i = 0; i < block->instructionCount; i++) {
+              if (block->instructions[i].otRoot != NULL) {
+                  fprintf(file, "    subgraph cluster_instruction%d {\n", clusterCounter);
+                  fprintf(file, "        label = \"OT of BB%d:%d\";\n", block->id, i);
+                  fprintf(file, "        style=rounded;\n");
+                  fprintf(file, "        color=blue;\n");
 
-                char entryNodeName[64];
-                snprintf(entryNodeName, sizeof(entryNodeName), "entry%d", clusterCounter);
-                fprintf(file, "        %s [shape=point, style=invis];\n", entryNodeName);
+                  char entryNodeName[64];
+                  snprintf(entryNodeName, sizeof(entryNodeName), "entry%d", clusterCounter);
+                  fprintf(file, "        %s [shape=point, style=invis];\n", entryNodeName);
 
-                writeOperationTreeToDot(file, block->instructions[i].otRoot, &nodeCounter);
+                  writeOperationTreeToDot(file, block->instructions[i].otRoot, &nodeCounter);
 
-                fprintf(file, "    }\n");
+                  fprintf(file, "    }\n");
 
-                fprintf(file, "    BB%d -> %s [lhead=cluster_instruction%d, color=blue];\n", block->id, entryNodeName, clusterCounter);
+                  fprintf(file, "    BB%d -> %s [lhead=cluster_instruction%d, color=blue];\n", block->id, entryNodeName, clusterCounter);
 
-                clusterCounter++;
-            }
+                  clusterCounter++;
+              }
+          }
         }
 
         block = block->next;

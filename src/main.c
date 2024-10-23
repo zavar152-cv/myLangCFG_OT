@@ -13,12 +13,14 @@ struct arguments {
     char **input_files;
     char *output_dir;
     int debug;
+    int ot;
     int input_file_count;
 };
 
 static struct argp_option options[] = {
     { "debug",  'd', 0,       0, "Enable debug output" },
     { "output", 'o', "DIR",   0, "Output directory name" },
+    { "operation tree", 't', 0,   0, "Draw operation tree in dot with CFG" },
     { 0 }
 };
 
@@ -28,6 +30,9 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
     switch (key) {
         case 'd':
             arguments->debug = 1;
+            break;
+        case 't':
+            arguments->ot = 1;
             break;
         case 'o':
             arguments->output_dir = arg;
@@ -117,6 +122,7 @@ int main(int argc, char *argv[]) {
     struct arguments arguments;
 
     arguments.debug = 0;
+    arguments.ot = 0;
     arguments.output_dir = NULL;
     arguments.input_files = NULL;
     arguments.input_file_count = 0;
@@ -170,7 +176,7 @@ int main(int argc, char *argv[]) {
     FunctionInfo *func = prog->functions;
     while (func != NULL) {
       char *outputFilePath = getOutputFileName(func->fileName, func->functionName, "dot", arguments.output_dir);
-      writeCFGToDotFile(func->cfg, outputFilePath);
+      writeCFGToDotFile(func->cfg, outputFilePath, arguments.ot);
       func = func->next;
       free(outputFilePath);
     }

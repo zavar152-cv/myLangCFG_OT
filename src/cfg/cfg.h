@@ -149,4 +149,4 @@ void addProgramWarning(Program *program, ProgramWarningInfo *errorInfo);
 
 void freeProgramWarnings(ProgramWarningInfo *error);
 
-void writeCFGToDotFile(CFG *cfg, const char *filename);
+void writeCFGToDotFile(CFG *cfg, const char *filename, bool drawOt);

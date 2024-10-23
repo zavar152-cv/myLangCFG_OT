@@ -755,12 +755,12 @@ void writeOperationTreeToDot(FILE *file, OperationTreeNode *node, int *nodeCount
     }
     *dst = '\0';
 
-    fprintf(file, "        node%d [label=\"%s\"];\n", currentNodeId, escapedLabel);
+    fprintf(file, "        node%d [label=\"%s\", color=blue];\n", currentNodeId, escapedLabel);
 
     for (uint32_t i = 0; i < node->childCount; i++) {
         int childNodeId = *nodeCounter;
         writeOperationTreeToDot(file, node->children[i], nodeCounter);
-        fprintf(file, "        node%d -> node%d;\n", currentNodeId, childNodeId);
+        fprintf(file, "        node%d -> node%d[color=blue];\n", currentNodeId, childNodeId);
     }
 }
 
@@ -772,11 +772,13 @@ void writeCFGToDotFile(CFG *cfg, const char *filename) {
     }
 
     fprintf(file, "digraph CFG {\n");
-    fprintf(file, "    graph [splines=true];");
+    fprintf(file, "    compound=true;\n");
+    fprintf(file, "    graph [splines=true];\n");
     fprintf(file, "    node [shape=rectangle];\n\n");
 
     BasicBlock *block = cfg->blocks;
     int nodeCounter = 0;
+    int clusterCounter = 0;
 
     while (block != NULL) {
         fprintf(file, "    BB%d [label=<", block->id);
@@ -819,10 +821,22 @@ void writeCFGToDotFile(CFG *cfg, const char *filename) {
 
         for (int i = 0; i < block->instructionCount; i++) {
             if (block->instructions[i].otRoot != NULL) {
-                fprintf(file, "    subgraph cluster_instruction%d {\n", nodeCounter);
-                fprintf(file, "        label = \"Operation Tree of BB%d:%d\";\n", block->id, i);
+                fprintf(file, "    subgraph cluster_instruction%d {\n", clusterCounter);
+                fprintf(file, "        label = \"OT of BB%d:%d\";\n", block->id, i);
+                fprintf(file, "        style=rounded;\n");
+                fprintf(file, "        color=blue;\n");
+
+                char entryNodeName[64];
+                snprintf(entryNodeName, sizeof(entryNodeName), "entry%d", clusterCounter);
+                fprintf(file, "        %s [shape=point, style=invis];\n", entryNodeName);
+
                 writeOperationTreeToDot(file, block->instructions[i].otRoot, &nodeCounter);
+
                 fprintf(file, "    }\n");
+
+                fprintf(file, "    BB%d -> %s [lhead=cluster_instruction%d, color=blue];\n", block->id, entryNodeName, clusterCounter);
+
+                clusterCounter++;
             }
         }
 

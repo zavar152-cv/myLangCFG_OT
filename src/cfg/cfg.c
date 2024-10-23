@@ -358,6 +358,7 @@ Program *buildProgram(FilesToAnalyze *files, bool debug) {
   program->errors = NULL;
   program->warnings = NULL;
 
+  bool redef = false;
   for (uint32_t i = 0; i < files->filesCount; i++) {
     MyLangResult* result = files->result[i];
     MyAstNode** funcDefs = result->tree->children;
@@ -401,7 +402,7 @@ Program *buildProgram(FilesToAnalyze *files, bool debug) {
         FunctionInfo *nextFunc = func->next;
         if (strcmp(func->functionName, info->functionName) == 0) {
           char buffer[1024];
-
+          redef = true;
           snprintf(buffer, sizeof(buffer),
             "Redeclaration error. Function %s at %s:%d:%d was previously declared at %s:%d:%d\n",
             info->functionName, info->fileName, info->line, info->pos + 1,
@@ -416,94 +417,96 @@ Program *buildProgram(FilesToAnalyze *files, bool debug) {
       addFunctionToProgram(program, info);
     }
   }
+  
+  if (!redef) {
+    for (uint32_t i = 0; i < files->filesCount; i++) {
+      MyLangResult *result = files->result[i];
+      MyAstNode **funcDefs = result->tree->children;
+      uint32_t childCount = result->tree->childCount;
+      for (uint32_t j = 0; j < childCount; j++) {
+        MyAstNode *block = funcDefs[j]->children[1];
+        assert(strcmp(block->label, BLOCK) == 0);
+        MyAstNode* funcSignature = funcDefs[j]->children[0];
+        assert(strcmp(funcSignature->label, FUNC_SIGNATURE) == 0);
+        MyAstNode* name;
+        if (funcSignature->childCount == 2) {
+          name = funcSignature->children[0];
+          assert(strcmp(name->label, NAME) == 0);
+        } else if (funcSignature->childCount == 3) {
+          name = funcSignature->children[1];
+          assert(strcmp(name->label, NAME) == 0);
+        }
+        CFG *cfg = createCFG();
+        uint32_t uid = 0;
+        BasicBlock *startBlock = createBasicBlock(uid, UNCONDITIONAL, "START");
+        cfg->entryBlock = startBlock;
+        addBasicBlock(cfg, startBlock);
 
-  for (uint32_t i = 0; i < files->filesCount; i++) {
-    MyLangResult *result = files->result[i];
-    MyAstNode **funcDefs = result->tree->children;
-    uint32_t childCount = result->tree->childCount;
-    for (uint32_t j = 0; j < childCount; j++) {
-      MyAstNode *block = funcDefs[j]->children[1];
-      assert(strcmp(block->label, BLOCK) == 0);
-      MyAstNode* funcSignature = funcDefs[j]->children[0];
-      assert(strcmp(funcSignature->label, FUNC_SIGNATURE) == 0);
-      MyAstNode* name;
-      if (funcSignature->childCount == 2) {
-        name = funcSignature->children[0];
-        assert(strcmp(name->label, NAME) == 0);
-      } else if (funcSignature->childCount == 3) {
-        name = funcSignature->children[1];
-        assert(strcmp(name->label, NAME) == 0);
-      }
-      CFG *cfg = createCFG();
-      uint32_t uid = 0;
-      BasicBlock *startBlock = createBasicBlock(uid, UNCONDITIONAL, "START");
-      cfg->entryBlock = startBlock;
-      addBasicBlock(cfg, startBlock);
+        BasicBlock *lastBlock = parseBlock(block, program, files->fileName[i], false, startBlock, NULL, NULL, cfg, &uid);
+        BasicBlock *retCheckBlock;
+        if (lastBlock->isEmpty) {
+          lastBlock->type = TERMINAL;
+          free(lastBlock->name);
+          lastBlock->name = strdup("END");
+          retCheckBlock = lastBlock;
+        } else {
+          BasicBlock *endBlock = createBasicBlock(++uid, TERMINAL, "END");
+          addBasicBlock(cfg, endBlock);
+          addEdge(lastBlock, endBlock, UNCONDITIONAL_JUMP, NULL);
+          retCheckBlock = endBlock;
+        }
 
-      BasicBlock *lastBlock = parseBlock(block, program, files->fileName[i], false, startBlock, NULL, NULL, cfg, &uid);
-      BasicBlock *retCheckBlock;
-      if (lastBlock->isEmpty) {
-        lastBlock->type = TERMINAL;
-        free(lastBlock->name);
-        lastBlock->name = strdup("END");
-        retCheckBlock = lastBlock;
-      } else {
-        BasicBlock *endBlock = createBasicBlock(++uid, TERMINAL, "END");
-        addBasicBlock(cfg, endBlock);
-        addEdge(lastBlock, endBlock, UNCONDITIONAL_JUMP, NULL);
-        retCheckBlock = endBlock;
-      }
-
-      Edge *inEdge = retCheckBlock->inEdges;
-      while (inEdge != NULL) {
-          BasicBlock *incomingBlock = inEdge->fromBlock;
-          if (incomingBlock->instructionCount > 0) {
-            OperationTreeNode *lastOperation = incomingBlock->instructions[incomingBlock->instructionCount - 1].otRoot;
-            if (incomingBlock->type == UNCONDITIONAL && ( isBinaryOp(lastOperation->label) ||
-                isUnaryOp(lastOperation->label) ||
-                strcmp(lastOperation->label, LIT_READ) == 0 ||
-                strcmp(lastOperation->label, READ) == 0 ||
-                strcmp(lastOperation->label, OT_CALL) == 0 ||
-                strcmp(lastOperation->label, INDEX) == 0)) {
-                OperationTreeNode *returnNode = newOperationTreeNode(RETURN, 1, lastOperation->line, lastOperation->pos, false);
-                returnNode->children[0] = lastOperation;
-                incomingBlock->instructions[incomingBlock->instructionCount - 1].otRoot = returnNode;
+        Edge *inEdge = retCheckBlock->inEdges;
+        while (inEdge != NULL) {
+            BasicBlock *incomingBlock = inEdge->fromBlock;
+            if (incomingBlock->instructionCount > 0) {
+              OperationTreeNode *lastOperation = incomingBlock->instructions[incomingBlock->instructionCount - 1].otRoot;
+              if (incomingBlock->type == UNCONDITIONAL && ( isBinaryOp(lastOperation->label) ||
+                  isUnaryOp(lastOperation->label) ||
+                  strcmp(lastOperation->label, LIT_READ) == 0 ||
+                  strcmp(lastOperation->label, READ) == 0 ||
+                  strcmp(lastOperation->label, OT_CALL) == 0 ||
+                  strcmp(lastOperation->label, INDEX) == 0)) {
+                  OperationTreeNode *returnNode = newOperationTreeNode(RETURN, 1, lastOperation->line, lastOperation->pos, false);
+                  returnNode->children[0] = lastOperation;
+                  incomingBlock->instructions[incomingBlock->instructionCount - 1].otRoot = returnNode;
+              } else {
+                char buffer[1024];
+                
+                snprintf(buffer, sizeof(buffer), 
+                "No return warning. Can't use instruction at %s:%d:%d as a return value",
+                        files->fileName[i], lastOperation->line, lastOperation->pos + 1);
+                ProgramWarningInfo* warning = createProgramWarningInfo(buffer);
+                addProgramWarning(program, warning);
+              }
             } else {
               char buffer[1024];
-              
+
               snprintf(buffer, sizeof(buffer), 
-              "No return warning. Can't use instruction at %s:%d:%d as a return value",
-                      files->fileName[i], lastOperation->line, lastOperation->pos + 1);
+              "No return warning. There is no instructions to use as a return value at %s in function %s",
+                      files->fileName[i], name->children[0]->label);
               ProgramWarningInfo* warning = createProgramWarningInfo(buffer);
               addProgramWarning(program, warning);
             }
-          } else {
-            char buffer[1024];
-
-            snprintf(buffer, sizeof(buffer), 
-            "No return warning. There is no instructions to use as a return value at %s in function %s",
-                    files->fileName[i], name->children[0]->label);
-            ProgramWarningInfo* warning = createProgramWarningInfo(buffer);
-            addProgramWarning(program, warning);
-          }
-          inEdge = inEdge->nextIn;
-      }
-
-      FunctionInfo *func = program->functions;
-      while (func != NULL) {
-        if (strcmp(func->functionName, name->children[0]->label) == 0) {
-          func->cfg = cfg;
+            inEdge = inEdge->nextIn;
         }
-        func = func->next;
+
+        FunctionInfo *func = program->functions;
+        while (func != NULL) {
+          if (strcmp(func->functionName, name->children[0]->label) == 0) {
+            func->cfg = cfg;
+          }
+          func = func->next;
+        }
       }
     }
-  }
 
-  if (debug) {
-    FunctionInfo *func = program->functions;
-    while (func != NULL) {
-      printFunctionInfo(func);
-      func = func->next;
+    if (debug) {
+      FunctionInfo *func = program->functions;
+      while (func != NULL) {
+        printFunctionInfo(func);
+        func = func->next;
+      }
     }
   }
 
@@ -816,6 +819,10 @@ void writeCFGToDotFile(CFG *cfg, const char *filename, bool drawOt) {
     fprintf(file, "    compound=true;\n");
     fprintf(file, "    graph [splines=true];\n");
     fprintf(file, "    node [shape=rectangle];\n\n");
+
+    if (cfg == NULL) {
+      return;
+    }
 
     BasicBlock *block = cfg->blocks;
     int nodeCounter = 0;

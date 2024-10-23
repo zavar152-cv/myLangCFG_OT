@@ -1,0 +1,5 @@
+digraph CFG {
+    compound=true;
+    graph [splines=true];
+    node [shape=rectangle];
+

@@ -181,14 +181,15 @@ int main(int argc, char *argv[]) {
       free(outputFilePath);
     }
 
-    CallGraph *graph = (CallGraph *)malloc(sizeof(CallGraph));
-    graph->functions = NULL;
+    if (prog->errors == NULL) {
+        CallGraph *graph = (CallGraph *)malloc(sizeof(CallGraph));
+        graph->functions = NULL;
 
-    traverseProgramAndBuildCallGraph(prog, graph, arguments.debug);
+        traverseProgramAndBuildCallGraph(prog, graph, arguments.debug);
+        writeCallGraphToDot(graph, "./cg.dot");
 
-    writeCallGraphToDot(graph, "./cg.dot");
-
-    freeCallGraph(graph);
+        freeCallGraph(graph);
+    }
 
     freeProgram(prog);
 

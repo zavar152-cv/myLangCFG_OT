@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include <argp.h>
 #include <libgen.h>
+#include <string.h>
 
 #include "grammar/myLang.h"
 #include "dotUtils/dotUtils.h"
@@ -117,6 +118,35 @@ char* getOutputFileName(const char* sourceFilePath, const char* functionName, co
     return outputFilePath;
 }
 
+char* getDirectory(const char* path) {
+    if (path == NULL) {
+        return NULL;
+    }
+
+    char* path_copy = strdup(path);
+    if (path_copy == NULL) {
+        return NULL;
+    }
+
+    char* last_slash = strrchr(path_copy, '/');
+#ifdef _WIN32
+    char* last_backslash = strrchr(path_copy, '\\');
+    if (last_backslash != NULL && (last_slash == NULL || last_backslash > last_slash)) {
+        last_slash = last_backslash;
+    }
+#endif
+
+    if (last_slash != NULL) {
+        *last_slash = '\0';
+        char* directory = strdup(path_copy);
+        free(path_copy);
+        return directory;
+    } else {
+        free(path_copy);
+        return NULL;
+    }
+}
+
 int main(int argc, char *argv[]) {
 
     struct arguments arguments;
@@ -174,19 +204,42 @@ int main(int argc, char *argv[]) {
     }
 
     FunctionInfo *func = prog->functions;
+    const char *mainFileName = NULL;
     while (func != NULL) {
+      if (strcmp(func->functionName, "main")) {
+        mainFileName = func->fileName;
+      }
       char *outputFilePath = getOutputFileName(func->fileName, func->functionName, "dot", arguments.output_dir);
       writeCFGToDotFile(func->cfg, outputFilePath, arguments.ot);
       func = func->next;
       free(outputFilePath);
     }
 
-    if (prog->errors == NULL) {
+    if (mainFileName == NULL) {
+        fprintf(stderr, "Error: main function is not defined\n");
+    }
+
+    if (prog->errors == NULL && (mainFileName != NULL || arguments.output_dir != NULL)) {
         CallGraph *graph = (CallGraph *)malloc(sizeof(CallGraph));
         graph->functions = NULL;
 
         traverseProgramAndBuildCallGraph(prog, graph, arguments.debug);
-        writeCallGraphToDot(graph, "./cg.dot");
+        char* dir;
+        char* path;
+        if (arguments.output_dir != NULL) {
+            dir = arguments.output_dir;
+            path = concat(dir, "/cg.dot");
+            writeCallGraphToDot(graph, path);
+            free(path);
+        } else if (mainFileName != NULL) {
+            dir = getDirectory(mainFileName);
+            path = concat(dir, "/cg.dot");
+            writeCallGraphToDot(graph, path);
+            free(path);
+            free(dir);
+        } else {
+            fprintf(stderr, "Error: can't save CG to dot file because main function and output directory are not defined\n");
+        }
 
         freeCallGraph(graph);
     }

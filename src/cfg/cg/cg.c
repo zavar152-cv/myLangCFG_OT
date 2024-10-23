@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-// Функции для Call Graph
 FunctionNode* createFunctionNode(const char *functionName) {
     FunctionNode *node = (FunctionNode *)malloc(sizeof(FunctionNode));
     node->functionName = strdup(functionName);
@@ -33,7 +32,6 @@ void addFunctionToCallGraph(CallGraph *cg, const char *functionName) {
 }
 
 void addCallEdge(CallGraph *cg, const char *callerName, const char *calleeName) {
-    // Найти или создать узел для caller
     FunctionNode *caller = findFunction(cg, callerName);
     if (caller == NULL) {
         caller = createFunctionNode(callerName);
@@ -41,7 +39,6 @@ void addCallEdge(CallGraph *cg, const char *callerName, const char *calleeName) 
         cg->functions = caller;
     }
     
-    // Найти или создать узел для callee
     FunctionNode *callee = findFunction(cg, calleeName);
     if (callee == NULL) {
         callee = createFunctionNode(calleeName);
@@ -49,24 +46,20 @@ void addCallEdge(CallGraph *cg, const char *callerName, const char *calleeName) 
         cg->functions = callee;
     }
     
-    // Проверить, существует ли уже ребро
     CallEdge *existingEdge = caller->outEdges;
     while (existingEdge != NULL) {
         if (strcmp(existingEdge->callee->functionName, calleeName) == 0) {
-            // Ребро уже существует
             return;
         }
         existingEdge = existingEdge->nextOut;
     }
     
-    // Создание нового исходящего ребра для caller
     CallEdge *outEdge = (CallEdge *)malloc(sizeof(CallEdge));
     outEdge->caller = caller;
     outEdge->callee = callee;
     outEdge->nextOut = caller->outEdges;
     caller->outEdges = outEdge;
     
-    // Создание нового входящего ребра для callee
     CallEdge *inEdge = (CallEdge *)malloc(sizeof(CallEdge));
     inEdge->caller = caller;
     inEdge->callee = callee;
@@ -79,7 +72,6 @@ void freeCallGraph(CallGraph *cg) {
     while (fn != NULL) {
         FunctionNode *nextFn = fn->next;
         
-        // Освобождение исходящих рёбер
         CallEdge *outEdge = fn->outEdges;
         while (outEdge != NULL) {
             CallEdge *nextOut = outEdge->nextOut;
@@ -87,7 +79,6 @@ void freeCallGraph(CallGraph *cg) {
             outEdge = nextOut;
         }
         
-        // Освобождение входящих рёбер
         CallEdge *inEdge = fn->inEdges;
         while (inEdge != NULL) {
             CallEdge *nextIn = inEdge->nextIn;
@@ -105,7 +96,7 @@ void freeCallGraph(CallGraph *cg) {
 void writeCallGraphToDot(CallGraph *cg, const char *filename) {
     FILE *file = fopen(filename, "w");
     if (file == NULL) {
-        fprintf(stderr, "Не удалось открыть файл %s для записи\n", filename);
+        fprintf(stderr, "Can't open file %s to write\n", filename);
         return;
     }
     

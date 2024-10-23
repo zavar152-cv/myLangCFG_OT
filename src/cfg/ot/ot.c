@@ -88,7 +88,7 @@ OperationTreeNode *buildExprOperationTreeFromAstNode(MyAstNode* root, bool isLva
       return callNode;
     } else if (root->childCount == 1) {
       OperationTreeNode *funcNameNode = buildExprOperationTreeFromAstNode(root->children[0], false, true, container, filename);
-      OperationTreeNode *callNode = newOperationTreeNode(CALL, 1, funcNameNode->line, funcNameNode->pos, funcNameNode->isImaginary);
+      OperationTreeNode *callNode = newOperationTreeNode(OT_CALL, 1, funcNameNode->line, funcNameNode->pos, funcNameNode->isImaginary);
       callNode->children[0] = funcNameNode;
       if (isLvalue) {
         char buffer[1024];
@@ -227,7 +227,7 @@ OperationTreeNode *buildExprOperationTreeFromAstNode(MyAstNode* root, bool isLva
     }
     OperationTreeNode *literalValueNode = newOperationTreeNode(root->children[0]->label, 0, root->children[0]->line, root->children[0]->pos, root->children[0]->isImaginary);
     OperationTreeNode *literalTypeNode = newOperationTreeNode(root->label, 0, root->line, root->pos, root->isImaginary);
-    OperationTreeNode *litReadNode = newOperationTreeNode(LIT_READ, 2, 0, 0, true);
+    OperationTreeNode *litReadNode = newOperationTreeNode(LIT_READ, 2, root->children[0]->line, root->children[0]->pos, true);
     litReadNode->children[0] = literalTypeNode;
     litReadNode->children[1] = literalValueNode;
     return litReadNode;
@@ -273,12 +273,12 @@ OperationTreeNode *buildVarDeclareHelper(MyAstNode* id, MyAstNode* init, Operati
       OperationTreeNode *helperNode = newOperationTreeNode(WRITE, 2, id->children[0]->line, id->children[0]->pos, false);
       helperNode->children[0] = newOperationTreeNode(id->children[0]->label, 0, id->children[0]->line, id->children[0]->pos, false);
       helperNode->children[1] = varInitExprNode;
-      declareNode = newOperationTreeNode(DECLARE, 3, 0, 0, true);
+      declareNode = newOperationTreeNode(DECLARE, 3, id->children[0]->line, id->children[0]->pos, true);
       declareNode->children[0] = withTypeNode;
       declareNode->children[1] = varNameNode;
       declareNode->children[2] = helperNode;
     } else {
-      declareNode = newOperationTreeNode(DECLARE, 2, 0, 0, true);
+      declareNode = newOperationTreeNode(DECLARE, 2, id->children[0]->line, id->children[0]->pos, true);
       declareNode->children[0] = withTypeNode;
       declareNode->children[1] = varNameNode;
     }

@@ -20,6 +20,7 @@ BasicBlock *createBasicBlock(int id, BlockType type, const char *name) {
   block->instructions =
       (Instruction *)malloc(sizeof(Instruction) * block->instructionCapacity);
   block->outEdges = NULL;
+  block->inEdges = NULL;
   block->next = NULL;
   block->name = strdup(name);
   block->isEmpty = false;
@@ -319,7 +320,8 @@ BasicBlock *parseBlock(MyAstNode* block, Program *program, const char* filename,
       BasicBlock *nestedExitBlock = parseDoWhile(block->children[i], program, filename, currentBlock, toExistingBlock, cfg, uid);
       currentBlock = nestedExitBlock;      
     } else if (strcmp(block->children[i]->label, BREAK) == 0) {
-      addInstruction(currentBlock, block->children[i]->children[0]->label, NULL);
+      OperationTreeNode *breakOtNode = newOperationTreeNode(OT_BREAK, 0, block->children[i]->children[0]->line, block->children[i]->children[0]->pos, false);
+      addInstruction(currentBlock, block->children[i]->children[0]->label, breakOtNode);
       if (isLoop) {
         addEdge(currentBlock, loopExitBlock, UNCONDITIONAL_JUMP, NULL);
         currentBlock->isBreak = true;
@@ -439,15 +441,54 @@ Program *buildProgram(FilesToAnalyze *files, bool debug) {
       addBasicBlock(cfg, startBlock);
 
       BasicBlock *lastBlock = parseBlock(block, program, files->fileName[i], false, startBlock, NULL, NULL, cfg, &uid);
+      BasicBlock *retCheckBlock;
       if (lastBlock->isEmpty) {
         lastBlock->type = TERMINAL;
         free(lastBlock->name);
         lastBlock->name = strdup("END");
+        retCheckBlock = lastBlock;
       } else {
         BasicBlock *endBlock = createBasicBlock(++uid, TERMINAL, "END");
         addBasicBlock(cfg, endBlock);
         addEdge(lastBlock, endBlock, UNCONDITIONAL_JUMP, NULL);
+        retCheckBlock = endBlock;
       }
+
+      Edge *inEdge = retCheckBlock->inEdges;
+      while (inEdge != NULL) {
+          BasicBlock *incomingBlock = inEdge->fromBlock;
+          if (incomingBlock->instructionCount > 0) {
+            OperationTreeNode *lastOperation = incomingBlock->instructions[incomingBlock->instructionCount - 1].otRoot;
+            if (incomingBlock->type == UNCONDITIONAL && ( isBinaryOp(lastOperation->label) ||
+                isUnaryOp(lastOperation->label) ||
+                strcmp(lastOperation->label, LIT_READ) == 0 ||
+                strcmp(lastOperation->label, READ) == 0 ||
+                strcmp(lastOperation->label, OT_CALL) == 0 ||
+                strcmp(lastOperation->label, INDEX) == 0)) {
+                OperationTreeNode *returnNode = newOperationTreeNode(RETURN, 1, lastOperation->line, lastOperation->pos, false);
+                returnNode->children[0] = lastOperation;
+                incomingBlock->instructions[incomingBlock->instructionCount - 1].otRoot = returnNode;
+            } else {
+              char buffer[1024];
+              
+              snprintf(buffer, sizeof(buffer), 
+              "No return warning. Can't use instruction at %s:%d:%d as a return value",
+                      files->fileName[i], lastOperation->line, lastOperation->pos + 1);
+              ProgramWarningInfo* warning = createProgramWarningInfo(buffer);
+              addProgramWarning(program, warning);
+            }
+          } else {
+            char buffer[1024];
+
+            snprintf(buffer, sizeof(buffer), 
+            "No return warning. There is no instructions to use as a return value at %s in function %s",
+                    files->fileName[i], name->children[0]->label);
+            ProgramWarningInfo* warning = createProgramWarningInfo(buffer);
+            addProgramWarning(program, warning);
+          }
+          inEdge = inEdge->nextIn;
+      }
+
       FunctionInfo *func = program->functions;
       while (func != NULL) {
         if (strcmp(func->functionName, name->children[0]->label) == 0) {

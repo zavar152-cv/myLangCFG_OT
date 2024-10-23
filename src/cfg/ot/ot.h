@@ -7,7 +7,7 @@
 #define LIT_READ "litRead"
 #define READ "read"
 #define WRITE "write"
-#define CALL "call"
+#define OT_CALL "call"
 #define INDEX "index"
 #define DECLARE "declare"
 #define SEQ_DECLARE "seqDeclare"
@@ -15,6 +15,8 @@
 #define CUSTOM "custom"
 #define BUILTIN "builtin"
 #define OT_ARRAY "array"
+#define RETURN "return"
+#define OT_BREAK "break"
 
 typedef struct OperationTreeNode {
   struct OperationTreeNode **children;
@@ -58,3 +60,9 @@ OperationTreeErrorInfo* createOperationTreeErrorInfo(const char *message);
 void addOperationTreeError(OperationTreeErrorContainer *container, const char *message);
 
 void freeOperationTreeErrors(OperationTreeErrorInfo *error);
+
+bool isBinaryOp(const char *label);
+
+bool isUnaryOp(const char *label);
+
+bool isLiteral(const char *label);

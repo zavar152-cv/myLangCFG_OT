@@ -1,0 +1,12 @@
+int main(string[] args) {
+    b;
+    func();
+    1;
+    true;
+    "str";
+    1+2;
+    a[1];
+    !b;
+    int k;
+    k = 9;
+}

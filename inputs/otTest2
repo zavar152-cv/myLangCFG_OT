@@ -1,0 +1,4 @@
+int main(string[] args) {
+    int a = b + 5 / 3;
+    byte[,,] b;
+}

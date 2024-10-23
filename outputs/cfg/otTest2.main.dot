@@ -1,0 +1,62 @@
+digraph CFG {
+    graph [splines=true];    node [shape=rectangle];
+
+    BB2 [label=<<B>BB2: END</B><BR ALIGN="CENTER"/>>];
+    BB1 [label=<<B>BB1: Base block</B><BR ALIGN="CENTER"/>VAR<BR ALIGN="CENTER"/>VAR<BR ALIGN="CENTER"/>>];
+    subgraph cluster_instruction0 {
+        label = "Operation Tree of BB1:0";
+        node0 [label="declare"];
+        node1 [label="withType"];
+        node2 [label="int"];
+        node1 -> node2;
+        node3 [label="builtin"];
+        node1 -> node3;
+        node0 -> node1;
+        node4 [label="a"];
+        node0 -> node4;
+        node5 [label="write"];
+        node6 [label="a"];
+        node5 -> node6;
+        node7 [label="+"];
+        node8 [label="read"];
+        node9 [label="b"];
+        node8 -> node9;
+        node7 -> node8;
+        node10 [label="/"];
+        node11 [label="litRead"];
+        node12 [label="DEC"];
+        node11 -> node12;
+        node13 [label="5"];
+        node11 -> node13;
+        node10 -> node11;
+        node14 [label="litRead"];
+        node15 [label="DEC"];
+        node14 -> node15;
+        node16 [label="3"];
+        node14 -> node16;
+        node10 -> node14;
+        node7 -> node10;
+        node5 -> node7;
+        node0 -> node5;
+    }
+    subgraph cluster_instruction17 {
+        label = "Operation Tree of BB1:1";
+        node17 [label="declare"];
+        node18 [label="withType"];
+        node19 [label="byte"];
+        node18 -> node19;
+        node20 [label="builtin"];
+        node18 -> node20;
+        node21 [label="array"];
+        node22 [label="2"];
+        node21 -> node22;
+        node18 -> node21;
+        node17 -> node18;
+        node23 [label="b"];
+        node17 -> node23;
+    }
+    BB0 [label=<<B>BB0: START</B><BR ALIGN="CENTER"/>>];
+
+    BB1 -> BB2;
+    BB0 -> BB1;
+}

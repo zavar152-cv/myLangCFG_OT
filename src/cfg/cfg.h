@@ -54,15 +54,6 @@ typedef struct {
     BasicBlock *blocks;
 } CFG;
 
-typedef struct {
-    char *typeName;
-    bool custom;
-    bool isArray;
-    uint32_t arrayDim;
-    uint32_t line;
-    uint32_t pos;
-} TypeInfo;
-
 typedef struct ArgumentInfo {
     TypeInfo *type;
     char *name;

@@ -2,6 +2,7 @@ int main(string[] args) {
     int sampleInt;
     sampleInt = 1;
     bool sampleBool = true;
+    int[] arr;
     a[1];
     a;
     a();

@@ -9,6 +9,12 @@
 #define WRITE "write"
 #define CALL "call"
 #define INDEX "index"
+#define DECLARE "declare"
+#define SEQ_DECLARE "seqDeclare"
+#define WITH_TYPE "withType"
+#define CUSTOM "custom"
+#define BUILTIN "builtin"
+#define OT_ARRAY "array"
 
 typedef struct OperationTreeNode {
   struct OperationTreeNode **children;
@@ -18,6 +24,15 @@ typedef struct OperationTreeNode {
   uint32_t pos;
   bool isImaginary;
 } OperationTreeNode;
+
+typedef struct {
+    char *typeName;
+    bool custom;
+    bool isArray;
+    uint32_t arrayDim;
+    uint32_t line;
+    uint32_t pos;
+} TypeInfo;
 
 typedef struct __attribute__((packed)) OperationTreeErrorInfo {
     char *message;
@@ -29,6 +44,8 @@ typedef struct OperationTreeErrorContainer {
 } OperationTreeErrorContainer;
 
 OperationTreeNode *newOperationTreeNode(const char *label, uint32_t childCount, uint32_t line, uint32_t pos, bool isImaginary);
+
+OperationTreeNode *buildVarOperationTreeFromAstNode(MyAstNode* root, OperationTreeErrorContainer *container, TypeInfo* varType, const char* filename);
 
 void destroyOperationTreeNodeTree(OperationTreeNode *root);
 

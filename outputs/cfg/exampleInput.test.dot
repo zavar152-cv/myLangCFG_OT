@@ -3,6 +3,18 @@ digraph CFG {
 
     BB2 [label=<<B>BB2: END</B><BR ALIGN="CENTER"/>>];
     BB1 [label=<<B>BB1: Base block</B><BR ALIGN="CENTER"/>VAR<BR ALIGN="CENTER"/>>];
+    subgraph cluster_instruction0 {
+        label = "Operation Tree of BB1:0";
+        node0 [label="declare"];
+        node1 [label="withType"];
+        node2 [label="int"];
+        node1 -> node2;
+        node3 [label="builtin"];
+        node1 -> node3;
+        node0 -> node1;
+        node4 [label="l"];
+        node0 -> node4;
+    }
     BB0 [label=<<B>BB0: START</B><BR ALIGN="CENTER"/>>];
 
     BB1 -> BB2;

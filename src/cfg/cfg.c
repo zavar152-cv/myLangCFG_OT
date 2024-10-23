@@ -104,23 +104,22 @@ void parseArgdefList(MyAstNode* argdefList, FunctionInfo* info) {
   }
 }
 
-//TODO operation tree
 void parseVar(MyAstNode* var, BasicBlock *currentBlock, Program *program, const char* filename) {
-  assert(strcmp(var->children[0]->label, TYPEREF) == 0);
+  OperationTreeErrorContainer *errorContainer = (OperationTreeErrorContainer*)malloc(sizeof(OperationTreeErrorContainer));
+  errorContainer->error = NULL;
+  TypeInfo *typeInfo = parseTyperef(var->children[0]);
+  OperationTreeNode *otNode = buildVarOperationTreeFromAstNode(var, errorContainer, typeInfo, filename);
+  addInstruction(currentBlock, var->label, otNode);
+  freeTypeInfo(typeInfo);
 
-  uint32_t varCount = (var->childCount - 1) / 2;
-
-  if (varCount == 1) {
-    //use DECLARE node
-  } else {
-    //use SEQ_DECLARE with childern type DECLARE
-    for (uint32_t i = 0; i < varCount; i++) {
-      var->children[i + 1]->label;     // ids
-      var->children[i + 1 + varCount]; // init
-    }
+  OperationTreeErrorInfo *errorInfo = errorContainer->error;
+  while (errorInfo != NULL) {
+    ProgramErrorInfo* error = createProgramErrorInfo(errorInfo->message);
+    addProgramError(program, error);
+    errorInfo = errorInfo->next;
   }
-
-  addInstruction(currentBlock, var->label, NULL);
+  freeOperationTreeErrors(errorContainer->error);
+  free(errorContainer);
 }
 
 void parseExpr(MyAstNode* expr, BasicBlock *currentBlock, Program *program, const char* filename) {
@@ -480,12 +479,12 @@ CFG *createCFG() {
 void printCFG(CFG *cfg) {
   BasicBlock *block = cfg->blocks;
   while (block != NULL) {
-    printf("Базовый блок %d, %s (%s):\n", block->id, block->name,
-           (block->type == CONDITIONAL)     ? "условный"
-           : (block->type == UNCONDITIONAL) ? "безусловный"
-                                            : "терминальный");
+    printf("Base block %d, %s (%s):\n", block->id, block->name,
+           (block->type == CONDITIONAL)     ? "conditional"
+           : (block->type == UNCONDITIONAL) ? "unconditional"
+                                            : "terminal");
     for (int i = 0; i < block->instructionCount; i++) {
-      printf("  Инструкция %d: %s\nДерево операций:\n", i, block->instructions[i].text);
+      printf("  Instruction %d: %s\nOperation tree:\n", i, block->instructions[i].text);
       if (block->instructions[i].otRoot != NULL) {
         printOperationTree(block->instructions[i].otRoot);
       }
@@ -493,16 +492,16 @@ void printCFG(CFG *cfg) {
     }
     Edge *edge = block->outEdges;
     while (edge != NULL) {
-      printf("  Переход к блоку %d", edge->targetBlock->id);
+      printf("  Jump to block %d", edge->targetBlock->id);
       switch (edge->type) {
       case TRUE_CONDITION:
-        printf(" если (%s) истинно", edge->condition);
+        printf(" if true");
         break;
       case FALSE_CONDITION:
-        printf(" если (%s) ложно", edge->condition);
+        printf(" if false");
         break;
       case UNCONDITIONAL_JUMP:
-        printf(" безусловный переход");
+        printf(" unconditional");
         break;
       }
       printf("\n");
@@ -724,10 +723,8 @@ void writeOperationTreeToDot(FILE *file, OperationTreeNode *node, int *nodeCount
         return;
     }
 
-    // Уникальный идентификатор для узла
     int currentNodeId = (*nodeCounter)++;
     
-    // Экранируем символы в метке узла
     char escapedLabel[256];
     const char *src = node->label;
     char *dst = escapedLabel;
@@ -758,15 +755,11 @@ void writeOperationTreeToDot(FILE *file, OperationTreeNode *node, int *nodeCount
     }
     *dst = '\0';
 
-    // Выводим узел с экранированной меткой
     fprintf(file, "        node%d [label=\"%s\"];\n", currentNodeId, escapedLabel);
 
-    // Рекурсивно выводим детей
     for (uint32_t i = 0; i < node->childCount; i++) {
         int childNodeId = *nodeCounter;
         writeOperationTreeToDot(file, node->children[i], nodeCounter);
-
-        // Выводим ребро от текущего узла к дочернему узлу
         fprintf(file, "        node%d -> node%d;\n", currentNodeId, childNodeId);
     }
 }
@@ -774,7 +767,7 @@ void writeOperationTreeToDot(FILE *file, OperationTreeNode *node, int *nodeCount
 void writeCFGToDotFile(CFG *cfg, const char *filename) {
     FILE *file = fopen(filename, "w");
     if (file == NULL) {
-        fprintf(stderr, "Не удалось открыть файл %s для записи\n", filename);
+        fprintf(stderr, "Can't open file %s to write\n", filename);
         return;
     }
 
@@ -783,15 +776,13 @@ void writeCFGToDotFile(CFG *cfg, const char *filename) {
     fprintf(file, "    node [shape=rectangle];\n\n");
 
     BasicBlock *block = cfg->blocks;
-    int nodeCounter = 0; // Уникальный счётчик для узлов графа
+    int nodeCounter = 0;
 
     while (block != NULL) {
-        // Выводим блок и его инструкции
         fprintf(file, "    BB%d [label=<", block->id);
         fprintf(file, "<B>BB%d: %s</B><BR ALIGN=\"CENTER\"/>", block->id, block->name);
 
         for (int i = 0; i < block->instructionCount; i++) {
-            // Экранируем спецсимволы в инструкции
             char instruction[256];
             char *src = block->instructions[i].text;
             char *dst = instruction;
@@ -826,17 +817,11 @@ void writeCFGToDotFile(CFG *cfg, const char *filename) {
 
         fprintf(file, ">];\n");
 
-        // Выводим подграф для каждой инструкции
         for (int i = 0; i < block->instructionCount; i++) {
             if (block->instructions[i].otRoot != NULL) {
-                // Начало подграфа
                 fprintf(file, "    subgraph cluster_instruction%d {\n", nodeCounter);
                 fprintf(file, "        label = \"Operation Tree of BB%d:%d\";\n", block->id, i);
-
-                // Выводим дерево операций
                 writeOperationTreeToDot(file, block->instructions[i].otRoot, &nodeCounter);
-
-                // Закрытие подграфа
                 fprintf(file, "    }\n");
             }
         }
@@ -846,7 +831,6 @@ void writeCFGToDotFile(CFG *cfg, const char *filename) {
 
     fprintf(file, "\n");
 
-    // Выводим рёбра между блоками
     block = cfg->blocks;
     while (block != NULL) {
         Edge *edge = block->outEdges;

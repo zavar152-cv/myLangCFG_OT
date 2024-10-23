@@ -3,6 +3,7 @@
 #include "grammar/myLang.h"
 #include "tokens.h"
 #include "ot/ot.h"
+#include "cg/cg.h"
 
 
 #define INITIAL_CAPACITY 4
@@ -150,3 +151,5 @@ void addProgramWarning(Program *program, ProgramWarningInfo *errorInfo);
 void freeProgramWarnings(ProgramWarningInfo *error);
 
 void writeCFGToDotFile(CFG *cfg, const char *filename, bool drawOt);
+
+void traverseProgramAndBuildCallGraph(Program *program, CallGraph *cg, bool debug);

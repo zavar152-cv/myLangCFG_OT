@@ -1,0 +1,42 @@
+digraph CFG {
+    compound=true;
+    graph [splines=true];
+    node [shape=rectangle];
+
+    BB2 [label=<<B>BB2: END</B><BR ALIGN="CENTER"/>>];
+    BB1 [label=<<B>BB1: Base block</B><BR ALIGN="CENTER"/>FUNC_CALL<BR ALIGN="CENTER"/>>];
+    subgraph cluster_instruction0 {
+        label = "OT of BB1:0";
+        style=rounded;
+        color=blue;
+        entry0 [shape=point, style=invis];
+        node0 [label="return", color=blue];
+        node1 [label="call", color=blue];
+        node2 [label="fuzz", color=blue];
+        node1 -> node2[color=blue];
+        node3 [label="litRead", color=blue];
+        node4 [label="BOOL", color=blue];
+        node3 -> node4[color=blue];
+        node5 [label="true", color=blue];
+        node3 -> node5[color=blue];
+        node1 -> node3[color=blue];
+        node6 [label="litRead", color=blue];
+        node7 [label="DEC", color=blue];
+        node6 -> node7[color=blue];
+        node8 [label="0", color=blue];
+        node6 -> node8[color=blue];
+        node1 -> node6[color=blue];
+        node9 [label="litRead", color=blue];
+        node10 [label="STR", color=blue];
+        node9 -> node10[color=blue];
+        node11 [label="\"testString\"", color=blue];
+        node9 -> node11[color=blue];
+        node1 -> node9[color=blue];
+        node0 -> node1[color=blue];
+    }
+    BB1 -> entry0 [lhead=cluster_instruction0, color=blue];
+    BB0 [label=<<B>BB0: START</B><BR ALIGN="CENTER"/>>];
+
+    BB1 -> BB2;
+    BB0 -> BB1;
+}

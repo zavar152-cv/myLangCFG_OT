@@ -1,26 +1,31 @@
+#pragma once
+
 typedef struct FunctionNode {
-    char* name;                    
-    struct FunctionNode** calls;    
-    int numCalls;                   
-    int maxCalls;                   
+    char *functionName;
+    struct FunctionNode *next;
+    struct CallEdge *outEdges;
+    struct CallEdge *inEdges;
 } FunctionNode;
 
+typedef struct CallEdge {
+    FunctionNode *caller;
+    FunctionNode *callee;
+    struct CallEdge *nextOut;
+    struct CallEdge *nextIn;
+} CallEdge;
+
 typedef struct CallGraph {
-    FunctionNode** functions;       
-    int numFunctions;               
-    int maxFunctions;               
+    FunctionNode *functions;
 } CallGraph;
 
-FunctionNode* createFunctionNode(const char* name);
+FunctionNode* createFunctionNode(const char *functionName);
 
-CallGraph* createCallGraph();
+FunctionNode* findFunction(CallGraph *cg, const char *functionName);
 
-void addFunctionToCG(CallGraph* graph, FunctionNode* function);
+void addFunctionToCallGraph(CallGraph *cg, const char *functionName);
 
-void addCall(FunctionNode* caller, FunctionNode* callee);
+void addCallEdge(CallGraph *cg, const char *callerName, const char *calleeName);
 
-void printCallGraph(const CallGraph* graph);
+void freeCallGraph(CallGraph *cg);
 
-void freeFunctionNode(FunctionNode* function);
-
-void freeCallGraph(CallGraph* graph);
+void writeCallGraphToDot(CallGraph *cg, const char *filename);

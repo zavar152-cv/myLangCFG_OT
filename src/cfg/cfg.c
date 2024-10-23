@@ -914,3 +914,103 @@ void writeCFGToDotFile(CFG *cfg, const char *filename, bool drawOt) {
 
     fclose(file);
 }
+
+void traverseOperationTreeAndBuildCallGraph(OperationTreeNode *node, int depth, CallGraph *cg, const char *callerName, bool debug) {
+    if (node == NULL) {
+        return;
+    }
+
+    if (debug) {
+      for (int i = 0; i < depth; i++) {
+        printf("  ");
+      }
+      printf("Node Label: %s, Line: %u, Pos: %u, IsImaginary: %s\n",
+             node->label, node->line, node->pos + 1,
+             node->isImaginary ? "true" : "false");
+    }
+
+    if (strcmp(node->label, "call") == 0 && node->childCount >= 1 && node->children[0] != NULL && node->children[0]->childCount == 0) {
+        const char *calleeName = node->children[0]->label;
+        if (debug)
+          printf("    Detected function call: %s -> %s\n", callerName, calleeName);
+        addCallEdge(cg, callerName, calleeName);
+    }
+
+    for (uint32_t i = 0; i < node->childCount; i++) {
+        traverseOperationTreeAndBuildCallGraph(node->children[i], depth + 1, cg, callerName, debug);
+    }
+}
+
+void traverseInstructionAndBuildCallGraph(Instruction *instr, CallGraph *cg, const char *callerName, bool debug) {
+    if (instr == NULL) {
+        return;
+    }
+
+    if (debug)
+      printf("    Instruction: %s\n", instr->text);
+
+    if (instr->otRoot != NULL) {
+        if (debug)
+          printf("      Operation Tree:\n");
+        traverseOperationTreeAndBuildCallGraph(instr->otRoot, 3, cg, callerName, debug);
+    }
+}
+
+void traverseBasicBlockAndBuildCallGraph(BasicBlock *block, CallGraph *cg, const char *functionName, bool debug) {
+    if (block == NULL) {
+        return;
+    }
+
+    if (debug)
+      printf("  BasicBlock ID: %d, Name: %s\n", block->id, block->name);
+
+    for (int i = 0; i < block->instructionCount; i++) {
+        traverseInstructionAndBuildCallGraph(&block->instructions[i], cg, functionName, debug);
+    }
+}
+
+void traverseCFGAndBuildCallGraph(CFG *cfg, CallGraph *cg, const char *functionName, bool debug) {
+    if (cfg == NULL) {
+        return;
+    }
+
+    if (debug)
+      printf("Traversing CFG for function: %s\n", functionName);
+
+    BasicBlock *block = cfg->blocks;
+    while (block != NULL) {
+        traverseBasicBlockAndBuildCallGraph(block, cg, functionName, debug);
+        block = block->next;
+    }
+
+    if (debug)
+      printf("End of CFG Traversal for function: %s\n", functionName);
+}
+
+void traverseProgramAndBuildCallGraph(Program *program, CallGraph *cg, bool debug) {
+    if (program == NULL) {
+        return;
+    }
+
+    if (debug)
+      printf("Starting Program Traversal and Building Call Graph.\n");
+
+    FunctionInfo *func = program->functions;
+    while (func != NULL) {
+      if (debug) {
+              printf("\nTraversing Function: %s in file %s (Line: %u, Pos: %u)\n",
+               func->functionName,
+               func->fileName,
+               func->line,
+               func->pos + 1);
+      }
+
+
+        traverseCFGAndBuildCallGraph(func->cfg, cg, func->functionName, debug);
+
+        func = func->next;
+    }
+
+    if (debug)
+      printf("\nEnd of Program Traversal.\n");
+}

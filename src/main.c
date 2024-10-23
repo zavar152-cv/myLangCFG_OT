@@ -181,6 +181,15 @@ int main(int argc, char *argv[]) {
       free(outputFilePath);
     }
 
+    CallGraph *graph = (CallGraph *)malloc(sizeof(CallGraph));
+    graph->functions = NULL;
+
+    traverseProgramAndBuildCallGraph(prog, graph, arguments.debug);
+
+    writeCallGraphToDot(graph, "./cg.dot");
+
+    freeCallGraph(graph);
+
     freeProgram(prog);
 
     for (uint32_t i = 0; i < files.filesCount; i++) {
@@ -189,24 +198,5 @@ int main(int argc, char *argv[]) {
     }
     free(arguments.input_files);
     free(files.result);
-
-    // CallGraph* graph = createCallGraph();
-
-    // FunctionNode* f1 = createFunctionNode("functionA");
-    // FunctionNode* f2 = createFunctionNode("functionB");
-    // FunctionNode* f3 = createFunctionNode("functionC");
-
-    // addFunction(graph, f1);
-    // addFunction(graph, f2);
-    // addFunction(graph, f3);
-
-    // addCall(f1, f2);
-    // addCall(f1, f3);
-    // addCall(f2, f3);
-
-    // printCallGraph(graph);
-
-    // freeCallGraph(graph);
-
-  return 0;
+    return 0;
 }

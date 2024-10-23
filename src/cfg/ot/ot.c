@@ -67,7 +67,7 @@ OperationTreeNode *buildExprOperationTreeFromAstNode(MyAstNode* root, bool isLva
     //child - EXPR
     if (root->childCount == 2) {
       OperationTreeNode *funcNameNode = buildExprOperationTreeFromAstNode(root->children[1], false, true, container, filename);
-      OperationTreeNode *callNode = newOperationTreeNode(CALL, 1 + root->children[0]->childCount, funcNameNode->line, funcNameNode->pos, funcNameNode->isImaginary);
+      OperationTreeNode *callNode = newOperationTreeNode(OT_CALL, 1 + root->children[0]->childCount, funcNameNode->line, funcNameNode->pos, funcNameNode->isImaginary);
       callNode->children[0] = funcNameNode;
       for (uint32_t i = 0; i < root->children[0]->childCount; i++) {
         OperationTreeNode *argNode = buildExprOperationTreeFromAstNode(root->children[0]->children[i], false, false, container, filename);

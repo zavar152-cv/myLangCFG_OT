@@ -1,0 +1,19 @@
+digraph CallGraph {
+    node [shape=ellipse, style=filled, color=lightblue];
+
+    "main";
+    "fuzz";
+    "buzz2";
+    "main2";
+    "buzz";
+    "fuzz2";
+
+    "main" -> "fuzz" [color=blue];
+    "fuzz" -> "main" [color=blue];
+    "fuzz" -> "buzz" [color=blue];
+    "buzz2" -> "fuzz" [color=blue];
+    "main2" -> "fuzz" [color=blue];
+    "buzz" -> "fuzz" [color=blue];
+    "fuzz2" -> "main2" [color=blue];
+    "fuzz2" -> "buzz" [color=blue];
+}

@@ -1,8 +1,5 @@
 digraph CallGraph {
     node [shape=ellipse, style=filled, color=lightblue];
 
-    "func";
-    "main";
 
-    "main" -> "func" [color=blue];
 }

@@ -236,6 +236,33 @@ OperationTreeNode *buildExprOperationTreeFromAstNode(MyAstNode* root, bool isLva
   }      
 }
 
+OperationTreeNode *buildTyperefHelper(OperationTreeErrorContainer *container, TypeInfo* varType, const char* filename) {
+  OperationTreeNode *withTypeNode = newOperationTreeNode(WITH_TYPE, varType->isArray ? 3 : 2, 0, 0, true);
+  if (varType->isArray) {
+    withTypeNode->children[0] = newOperationTreeNode(varType->typeName, 0, varType->line, varType->pos, false);
+    withTypeNode->children[1] = newOperationTreeNode(varType->custom ? CUSTOM : BUILTIN, 0, varType->line, varType->pos, false);
+
+    if (varType->next != NULL) {
+      withTypeNode->children[2] = newOperationTreeNode(OT_ARRAY, 2, varType->line, varType->pos, false);
+      char buffer[12];
+      snprintf(buffer, sizeof(buffer), "%u", varType->arrayDim);
+      withTypeNode->children[2]->children[0] = newOperationTreeNode(buffer, 0, varType->line, varType->pos, false); 
+
+      withTypeNode->children[2]->children[1] = buildTyperefHelper(container, varType->next, filename);
+
+    } else {
+      withTypeNode->children[2] = newOperationTreeNode(OT_ARRAY, 1, varType->line, varType->pos, false);
+      char buffer[12];
+      snprintf(buffer, sizeof(buffer), "%u", varType->arrayDim);
+      withTypeNode->children[2]->children[0] = newOperationTreeNode(buffer, 0, varType->line, varType->pos, false);
+    }
+  } else {
+    withTypeNode->children[0] = newOperationTreeNode(varType->typeName, 0, varType->line, varType->pos, false);
+    withTypeNode->children[1] = newOperationTreeNode(varType->custom ? CUSTOM : BUILTIN, 0, varType->line, varType->pos, false);
+  }
+  return withTypeNode;
+}
+
 OperationTreeNode *buildVarDeclareHelper(MyAstNode* id, MyAstNode* init, OperationTreeErrorContainer *container, TypeInfo* varType, const char* filename) {
   OperationTreeNode *declareNode;
   OperationTreeNode *withTypeNode = newOperationTreeNode(WITH_TYPE, varType->isArray ? 3 : 2, 0, 0, true);
@@ -243,10 +270,21 @@ OperationTreeNode *buildVarDeclareHelper(MyAstNode* id, MyAstNode* init, Operati
     OperationTreeNode *varNameNode = newOperationTreeNode(id->children[0]->label, 0, id->children[0]->line, id->children[0]->pos, false);
     withTypeNode->children[0] = newOperationTreeNode(varType->typeName, 0, varType->line, varType->pos, false);
     withTypeNode->children[1] = newOperationTreeNode(varType->custom ? CUSTOM : BUILTIN, 0, varType->line, varType->pos, false);
-    withTypeNode->children[2] = newOperationTreeNode(OT_ARRAY, 1, varType->line, varType->pos, false);
-    char buffer[12];
-    snprintf(buffer, sizeof(buffer), "%u", varType->arrayDim);
-    withTypeNode->children[2]->children[0] = newOperationTreeNode(buffer, 0, varType->line, varType->pos, false);
+
+    if (varType->next != NULL) {
+      withTypeNode->children[2] = newOperationTreeNode(OT_ARRAY, 2, varType->line, varType->pos, false);
+      char buffer[12];
+      snprintf(buffer, sizeof(buffer), "%u", varType->arrayDim);
+      withTypeNode->children[2]->children[0] = newOperationTreeNode(buffer, 0, varType->line, varType->pos, false); 
+
+      withTypeNode->children[2]->children[1] = buildTyperefHelper(container, varType->next, filename);
+
+    } else {
+      withTypeNode->children[2] = newOperationTreeNode(OT_ARRAY, 1, varType->line, varType->pos, false);
+      char buffer[12];
+      snprintf(buffer, sizeof(buffer), "%u", varType->arrayDim);
+      withTypeNode->children[2]->children[0] = newOperationTreeNode(buffer, 0, varType->line, varType->pos, false);
+    }
     assert(strcmp(init->children[0]->label, id->children[0]->label) == 0);
     OperationTreeNode *varInitExprNode;
     if (init->childCount == 2) {

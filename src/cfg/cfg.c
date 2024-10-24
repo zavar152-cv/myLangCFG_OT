@@ -77,7 +77,7 @@ void addBasicBlock(CFG *cfg, BasicBlock *block) {
 }
 
 TypeInfo* parseTyperef(MyAstNode* typeRef) {
-  assert(typeRef->childCount == 1 || typeRef->childCount == 2);
+  assert(typeRef->childCount == 1 || typeRef->childCount == 2 || typeRef->childCount == 3);
 
   if (typeRef->childCount == 1) {
     MyAstNode* type = typeRef->children[0];
@@ -87,6 +87,14 @@ TypeInfo* parseTyperef(MyAstNode* typeRef) {
     assert(strcmp(typeRef->children[1]->label, ARRAY) == 0);
     uint32_t dim = typeRef->children[1]->childCount == 1 ? typeRef->children[1]->children[0]->childCount : 1;
     return createTypeInfo(type->children[0]->label, strcmp(type->label, CUSTOM_TYPE) == 0, true, dim, type->children[0]->line, type->children[0]->pos);
+  } else if (typeRef->childCount == 3) {
+    MyAstNode* type = typeRef->children[0];
+    assert(strcmp(typeRef->children[1]->label, ARRAY) == 0);
+    uint32_t dim = typeRef->children[1]->childCount == 1 ? typeRef->children[1]->children[0]->childCount : 1;   
+    TypeInfo* next = parseTyperef(typeRef->children[2]);
+    TypeInfo* typeInfo = createTypeInfo(type->children[0]->label, strcmp(type->label, CUSTOM_TYPE) == 0, true, dim, type->children[0]->line, type->children[0]->pos);
+    typeInfo->next = next;
+    return typeInfo;
   }
 }
 
@@ -601,16 +609,23 @@ TypeInfo *createTypeInfo(const char *typeName, bool custom, bool isArray, uint32
   typeInfo->arrayDim = arrayDim;
   typeInfo->line = line;
   typeInfo->pos = pos;
+  typeInfo->next = NULL;
   return typeInfo;
 }
 
-void freeTypeInfo(TypeInfo *typeInfo) {
-  if (typeInfo != NULL) {
-    if (typeInfo->typeName != NULL) {
-      free(typeInfo->typeName);
+void freeTypeInfo(TypeInfo *head) {
+    TypeInfo *current = head;
+    while (current != NULL) {
+        TypeInfo *nextNode = current->next;
+
+        if (current->typeName != NULL) {
+            free(current->typeName);
+            current->typeName = NULL;
+        }
+
+        free(current);
+        current = nextNode;
     }
-    free(typeInfo);
-  }
 }
 
 ArgumentInfo *createArgumentInfo(TypeInfo *type, const char *name, uint32_t line, uint32_t pos) {

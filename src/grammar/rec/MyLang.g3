@@ -93,16 +93,41 @@ statement
     ;
 
 typeRef
+    : multipleTypeRef
+    | singleTypeRef
+    ;
+
+
+multipleTypeRef
+    : firstTypeRef simpleTypeRef* -> ^(firstTypeRef simpleTypeRef*)
+    ;
+
+firstTypeRef
+    : simpleTypeRefWithArray
+    ;
+
+simpleTypeRef
+    : simpleTypeRefWithOptionalArray
+    ;
+
+simpleTypeRefWithArray
+    : baseType array+ -> ^(TYPEREF baseType array+)
+    ;
+
+simpleTypeRefWithOptionalArray
     : baseType array* -> ^(TYPEREF baseType array*)
+    ;
+
+singleTypeRef
+    : baseType array* -> ^(TYPEREF baseType array*)
+    ;
+
+array
+    : '[' size+=(',')* ']' -> ^(ARRAY ^(ARRAY_SIZE $size*)?)
     ;
 
 var
     : typeRef ((identifier ('=' expr)?) (',' (identifier ('=' expr)?))*) -> ^(VAR ^(typeRef) ^(IDENTIFIER identifier)* ^(INIT identifier expr)*)
-    ;
-
-//WTF is size?
-array
-    : '[' size+=(',')* ']' -> ^(ARRAY ^(ARRAY_SIZE $size*)?)
     ;
 
 baseType

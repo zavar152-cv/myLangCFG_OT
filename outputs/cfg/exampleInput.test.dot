@@ -5,6 +5,22 @@ digraph CFG {
 
     BB2 [label=<<B>BB2: END</B><BR ALIGN="CENTER"/>>];
     BB1 [label=<<B>BB1: Base block</B><BR ALIGN="CENTER"/>VAR<BR ALIGN="CENTER"/>>];
+    subgraph cluster_instruction0 {
+        label = "OT of BB1:0";
+        style=rounded;
+        color=blue;
+        entry0 [shape=point, style=invis];
+        node0 [label="declare", color=blue];
+        node1 [label="withType", color=blue];
+        node2 [label="int", color=blue];
+        node1 -> node2[color=blue];
+        node3 [label="builtin", color=blue];
+        node1 -> node3[color=blue];
+        node0 -> node1[color=blue];
+        node4 [label="l", color=blue];
+        node0 -> node4[color=blue];
+    }
+    BB1 -> entry0 [lhead=cluster_instruction0, color=blue];
     BB0 [label=<<B>BB0: START</B><BR ALIGN="CENTER"/>>];
 
     BB1 -> BB2;

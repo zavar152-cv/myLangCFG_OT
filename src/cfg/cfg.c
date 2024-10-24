@@ -77,7 +77,7 @@ void addBasicBlock(CFG *cfg, BasicBlock *block) {
 }
 
 TypeInfo* parseTyperef(MyAstNode* typeRef) {
-  assert(typeRef->childCount == 1 || typeRef->childCount == 2 || typeRef->childCount == 3);
+  assert(typeRef->childCount == 1 || typeRef->childCount == 2 || typeRef->childCount >= 3);
 
   if (typeRef->childCount == 1) {
     MyAstNode* type = typeRef->children[0];
@@ -87,14 +87,26 @@ TypeInfo* parseTyperef(MyAstNode* typeRef) {
     assert(strcmp(typeRef->children[1]->label, ARRAY) == 0);
     uint32_t dim = typeRef->children[1]->childCount == 1 ? typeRef->children[1]->children[0]->childCount : 1;
     return createTypeInfo(type->children[0]->label, strcmp(type->label, CUSTOM_TYPE) == 0, true, dim, type->children[0]->line, type->children[0]->pos);
-  } else if (typeRef->childCount == 3) {
+  } else if (typeRef->childCount >= 3) {
     MyAstNode* type = typeRef->children[0];
     assert(strcmp(typeRef->children[1]->label, ARRAY) == 0);
-    uint32_t dim = typeRef->children[1]->childCount == 1 ? typeRef->children[1]->children[0]->childCount : 1;   
-    TypeInfo* next = parseTyperef(typeRef->children[2]);
-    TypeInfo* typeInfo = createTypeInfo(type->children[0]->label, strcmp(type->label, CUSTOM_TYPE) == 0, true, dim, type->children[0]->line, type->children[0]->pos);
-    typeInfo->next = next;
-    return typeInfo;
+    if (strcmp(typeRef->children[typeRef->childCount - 1]->label, TYPEREF) == 0) {
+      uint32_t dim = 0;
+      for (uint32_t i = 1; i < typeRef->childCount - 1; i++) {
+        dim = dim + (typeRef->children[i]->childCount == 1 ? typeRef->children[i]->children[0]->childCount : 1);
+      }
+      TypeInfo *next = parseTyperef(typeRef->children[typeRef->childCount - 1]);
+      TypeInfo *finalType = createTypeInfo(type->children[0]->label, strcmp(type->label, CUSTOM_TYPE) == 0, true, dim, type->children[0]->line, type->children[0]->pos);
+      finalType->next = next;
+      return finalType;
+    } else {
+      uint32_t dim = 0;
+      for (uint32_t i = 1; i < typeRef->childCount; i++) {
+        dim = dim + (typeRef->children[i]->childCount == 1 ? typeRef->children[i]->children[0]->childCount : 1);
+      }
+      TypeInfo *finalType = createTypeInfo(type->children[0]->label, strcmp(type->label, CUSTOM_TYPE) == 0, true, dim, type->children[0]->line, type->children[0]->pos);
+      return finalType;      
+    }
   }
 }
 
@@ -233,8 +245,8 @@ BasicBlock* parseDoWhile(MyAstNode* doWhileBlock, Program *program, const char* 
   freeOperationTreeErrors(errorContainer->error);
   free(errorContainer);
 
-  addEdge(conditionBlock, bodyBlock, TRUE_CONDITION, NULL);   // TODO
-  addEdge(conditionBlock, emptyBlock, FALSE_CONDITION, NULL); // TODO
+  addEdge(conditionBlock, bodyBlock, TRUE_CONDITION, NULL);
+  addEdge(conditionBlock, emptyBlock, FALSE_CONDITION, NULL);
 
   BasicBlock *bodyExitBlock = parseBlock(doWhileBlock->children[0], program, filename, true, conditionBlock, bodyBlock, conditionBlock, cfg, uid);
 
@@ -281,8 +293,8 @@ BasicBlock* parseWhile(MyAstNode* whileBlock, Program *program, const char* file
     BasicBlock *bodyBlock = createBasicBlock(++(*uid), UNCONDITIONAL, "While Body");
     addBasicBlock(cfg, bodyBlock);
 
-    addEdge(conditionBlock, bodyBlock, TRUE_CONDITION, NULL); //TODO
-    addEdge(conditionBlock, emptyBlock, FALSE_CONDITION, NULL); //TODO
+    addEdge(conditionBlock, bodyBlock, TRUE_CONDITION, NULL);
+    addEdge(conditionBlock, emptyBlock, FALSE_CONDITION, NULL);
 
     BasicBlock *bodyExitBlock = parseBlock(whileBlock->children[1], program, filename, true, conditionBlock, bodyBlock, emptyBlock, cfg, uid);
 
@@ -335,11 +347,11 @@ BasicBlock *parseIf(MyAstNode* ifBlock, Program *program, const char* filename, 
         addBasicBlock(cfg, elseBlock);
     }
 
-    addEdge(conditionBlock, thenBlock, TRUE_CONDITION, NULL); //TODO
+    addEdge(conditionBlock, thenBlock, TRUE_CONDITION, NULL);
     if (elseBlock != NULL) {
-        addEdge(conditionBlock, elseBlock, FALSE_CONDITION, NULL); //TODO
+        addEdge(conditionBlock, elseBlock, FALSE_CONDITION, NULL);
     } else {
-        addEdge(conditionBlock, emptyBlock, FALSE_CONDITION, NULL); //TODO
+        addEdge(conditionBlock, emptyBlock, FALSE_CONDITION, NULL);
     }
 
     BasicBlock *thenExitBlock = parseBlock(ifBlock->children[1], program, filename, isLoop, conditionBlock, thenBlock, loopExitBlock, cfg, uid);

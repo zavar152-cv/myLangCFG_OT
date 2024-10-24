@@ -1,5 +1,12 @@
 digraph CallGraph {
     node [shape=ellipse, style=filled, color=lightblue];
 
+    "a";
+    "check";
+    "call";
+    "main";
 
+    "main" -> "a" [color=blue];
+    "main" -> "check" [color=blue];
+    "main" -> "call" [color=blue];
 }

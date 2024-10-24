@@ -1,0 +1,133 @@
+digraph CFG {
+    compound=true;
+    graph [splines=true];
+    node [shape=rectangle];
+
+    BB8 [label=<<B>BB8: Then Block</B><BR ALIGN="CENTER"/>FUNC_CALL<BR ALIGN="CENTER"/>FUNC_CALL<BR ALIGN="CENTER"/>>];
+    subgraph cluster_instruction0 {
+        label = "OT of BB8:0";
+        style=rounded;
+        color=blue;
+        entry0 [shape=point, style=invis];
+        node0 [label="call", color=blue];
+        node1 [label="call", color=blue];
+        node0 -> node1[color=blue];
+    }
+    BB8 -> entry0 [lhead=cluster_instruction0, color=blue];
+    subgraph cluster_instruction1 {
+        label = "OT of BB8:1";
+        style=rounded;
+        color=blue;
+        entry1 [shape=point, style=invis];
+        node2 [label="call", color=blue];
+        node3 [label="call", color=blue];
+        node2 -> node3[color=blue];
+    }
+    BB8 -> entry1 [lhead=cluster_instruction1, color=blue];
+    BB6 [label=<<B>BB6: Do While Condition</B><BR ALIGN="CENTER"/>EXPR<BR ALIGN="CENTER"/>>];
+    subgraph cluster_instruction2 {
+        label = "OT of BB6:0";
+        style=rounded;
+        color=blue;
+        entry2 [shape=point, style=invis];
+        node4 [label="litRead", color=blue];
+        node5 [label="BOOL", color=blue];
+        node4 -> node5[color=blue];
+        node6 [label="true", color=blue];
+        node4 -> node6[color=blue];
+    }
+    BB6 -> entry2 [lhead=cluster_instruction2, color=blue];
+    BB5 [label=<<B>BB5: If Condition</B><BR ALIGN="CENTER"/>EXPR<BR ALIGN="CENTER"/>>];
+    subgraph cluster_instruction3 {
+        label = "OT of BB5:0";
+        style=rounded;
+        color=blue;
+        entry3 [shape=point, style=invis];
+        node7 [label="litRead", color=blue];
+        node8 [label="BOOL", color=blue];
+        node7 -> node8[color=blue];
+        node9 [label="true", color=blue];
+        node7 -> node9[color=blue];
+    }
+    BB5 -> entry3 [lhead=cluster_instruction3, color=blue];
+    BB4 [label=<<B>BB4: Do While body</B><BR ALIGN="CENTER"/>FUNC_CALL<BR ALIGN="CENTER"/>>];
+    subgraph cluster_instruction4 {
+        label = "OT of BB4:0";
+        style=rounded;
+        color=blue;
+        entry4 [shape=point, style=invis];
+        node10 [label="call", color=blue];
+        node11 [label="call", color=blue];
+        node10 -> node11[color=blue];
+    }
+    BB4 -> entry4 [lhead=cluster_instruction4, color=blue];
+    BB3 [label=<<B>BB3: Do While Condition</B><BR ALIGN="CENTER"/>EXPR<BR ALIGN="CENTER"/>>];
+    subgraph cluster_instruction5 {
+        label = "OT of BB3:0";
+        style=rounded;
+        color=blue;
+        entry5 [shape=point, style=invis];
+        node12 [label="litRead", color=blue];
+        node13 [label="BOOL", color=blue];
+        node12 -> node13[color=blue];
+        node14 [label="true", color=blue];
+        node12 -> node14[color=blue];
+    }
+    BB3 -> entry5 [lhead=cluster_instruction5, color=blue];
+    BB2 [label=<<B>BB2: END</B><BR ALIGN="CENTER"/>>];
+    BB1 [label=<<B>BB1: Base block</B><BR ALIGN="CENTER"/>VAR<BR ALIGN="CENTER"/>FUNC_CALL<BR ALIGN="CENTER"/>VAR<BR ALIGN="CENTER"/>>];
+    subgraph cluster_instruction6 {
+        label = "OT of BB1:0";
+        style=rounded;
+        color=blue;
+        entry6 [shape=point, style=invis];
+        node15 [label="declare", color=blue];
+        node16 [label="withType", color=blue];
+        node17 [label="int", color=blue];
+        node16 -> node17[color=blue];
+        node18 [label="builtin", color=blue];
+        node16 -> node18[color=blue];
+        node15 -> node16[color=blue];
+        node19 [label="y", color=blue];
+        node15 -> node19[color=blue];
+    }
+    BB1 -> entry6 [lhead=cluster_instruction6, color=blue];
+    subgraph cluster_instruction7 {
+        label = "OT of BB1:1";
+        style=rounded;
+        color=blue;
+        entry7 [shape=point, style=invis];
+        node20 [label="call", color=blue];
+        node21 [label="check", color=blue];
+        node20 -> node21[color=blue];
+    }
+    BB1 -> entry7 [lhead=cluster_instruction7, color=blue];
+    subgraph cluster_instruction8 {
+        label = "OT of BB1:2";
+        style=rounded;
+        color=blue;
+        entry8 [shape=point, style=invis];
+        node22 [label="declare", color=blue];
+        node23 [label="withType", color=blue];
+        node24 [label="int", color=blue];
+        node23 -> node24[color=blue];
+        node25 [label="builtin", color=blue];
+        node23 -> node25[color=blue];
+        node22 -> node23[color=blue];
+        node26 [label="k", color=blue];
+        node22 -> node26[color=blue];
+    }
+    BB1 -> entry8 [lhead=cluster_instruction8, color=blue];
+    BB0 [label=<<B>BB0: START</B><BR ALIGN="CENTER"/>>];
+
+    BB8 -> BB3;
+    BB6 -> BB5 [label="False", color=red];
+    BB6 -> BB4 [label="True", color=green];
+    BB5 -> BB3 [label="False", color=red];
+    BB5 -> BB8 [label="True", color=green];
+    BB4 -> BB6;
+    BB3 -> BB2 [label="False", color=red];
+    BB3 -> BB1 [label="True", color=green];
+    BB1 -> BB4;
+    BB0 -> BB1;
+}

@@ -148,7 +148,59 @@ void parseExpr(MyAstNode* expr, BasicBlock *currentBlock, Program *program, cons
   free(errorContainer);
 }
 
-BasicBlock* parseDoWhile(MyAstNode* doWhileBlock, Program *program, const char* filename, BasicBlock* prevBlock, BasicBlock* existingBlock, CFG *cfg, uint32_t *uid) {
+void mergeBasicBlocks(CFG *cfg, BasicBlock *block1, BasicBlock *block2) {
+    if (block1 == NULL || block2 == NULL) {
+        fprintf(stderr, "mergeBasicBlocks: One block is NULL.\n");
+        return;
+    }
+
+    int originalCount = block1->instructionCount;
+    block1->instructionCount += block2->instructionCount;
+    block1->instructions = realloc(block1->instructions, sizeof(Instruction) * block1->instructionCount);
+    if (block1->instructions == NULL) {
+        fprintf(stderr, "mergeBasicBlocks: Can't realloc memory for instructions.\n");
+        exit(EXIT_FAILURE);
+    }
+    memcpy(block1->instructions + originalCount, block2->instructions, sizeof(Instruction) * block2->instructionCount);
+
+    Edge *inEdge = block2->inEdges;
+    while (inEdge != NULL) {
+        inEdge->targetBlock = block1;
+        inEdge = inEdge->nextIn;
+    }
+
+    Edge *outEdge = block2->outEdges;
+    while (outEdge != NULL) {
+        outEdge->fromBlock = block1;
+        outEdge = outEdge->nextOut;
+    }
+    BasicBlock *prev = NULL;
+    BasicBlock *current = cfg->blocks;
+    while (current != NULL && current != block2) {
+        prev = current;
+        current = current->next;
+    }
+
+    if (current == NULL) {
+        fprintf(stderr, "mergeBasicBlocks: block2 is not in CFG.\n");
+        return;
+    }
+
+    if (prev == NULL) {
+        cfg->blocks = block2->next;
+    } else {
+        prev->next = block2->next;
+    }
+
+    for (int i = 0; i < block2->instructionCount; i++) {
+        free(block2->instructions[i].text);
+    }
+    free(block2->instructions);
+    free(block2->name);
+    free(block2);
+}
+
+BasicBlock* parseDoWhile(MyAstNode* doWhileBlock, Program *program, const char* filename, BasicBlock* prevBlock, BasicBlock* existingBlock, BasicBlock* loopExitBlock, CFG *cfg, uint32_t *uid) {
   assert(strcmp(doWhileBlock->label, DO_WHILE) == 0);
   BasicBlock *bodyBlock;
   if (existingBlock == NULL) {
@@ -184,13 +236,17 @@ BasicBlock* parseDoWhile(MyAstNode* doWhileBlock, Program *program, const char* 
   addEdge(conditionBlock, bodyBlock, TRUE_CONDITION, NULL);   // TODO
   addEdge(conditionBlock, emptyBlock, FALSE_CONDITION, NULL); // TODO
 
-  BasicBlock *bodyExitBlock = parseBlock(doWhileBlock->children[0], program, filename, true, conditionBlock, bodyBlock, emptyBlock, cfg, uid);
+  BasicBlock *bodyExitBlock = parseBlock(doWhileBlock->children[0], program, filename, true, conditionBlock, bodyBlock, conditionBlock, cfg, uid);
 
-  addEdge(bodyExitBlock, conditionBlock, UNCONDITIONAL_JUMP, NULL);
+  if (bodyExitBlock->isEmpty) {
+    mergeBasicBlocks(cfg, conditionBlock, bodyExitBlock);
+  } else {
+    addEdge(bodyExitBlock, conditionBlock, UNCONDITIONAL_JUMP, NULL);
+  }
   return emptyBlock;
 }
 
-BasicBlock* parseWhile(MyAstNode* whileBlock, Program *program, const char* filename, BasicBlock* prevBlock, BasicBlock* existingBlock, CFG *cfg, uint32_t *uid) {
+BasicBlock* parseWhile(MyAstNode* whileBlock, Program *program, const char* filename, BasicBlock* prevBlock, BasicBlock* existingBlock, BasicBlock* loopExitBlock, CFG *cfg, uint32_t *uid) {
     assert(strcmp(whileBlock->label, WHILE) == 0);
 
     BasicBlock *conditionBlock;            
@@ -230,7 +286,11 @@ BasicBlock* parseWhile(MyAstNode* whileBlock, Program *program, const char* file
 
     BasicBlock *bodyExitBlock = parseBlock(whileBlock->children[1], program, filename, true, conditionBlock, bodyBlock, emptyBlock, cfg, uid);
 
-    addEdge(bodyExitBlock, conditionBlock, UNCONDITIONAL_JUMP, NULL);
+    if (bodyExitBlock->isEmpty) {
+      mergeBasicBlocks(cfg, conditionBlock, bodyExitBlock);
+    } else {
+      addEdge(bodyExitBlock, conditionBlock, UNCONDITIONAL_JUMP, NULL);
+    }
     return emptyBlock;
 }
 
@@ -297,7 +357,7 @@ BasicBlock *parseBlock(MyAstNode* block, Program *program, const char* filename,
   assert(strcmp(block->label, BLOCK) == 0);
   BasicBlock *currentBlock;
   if (existingBlock == NULL) {
-    currentBlock = createBasicBlock(++(*uid), UNCONDITIONAL, "Base block");
+    currentBlock = createEmptyBasicBlock(++(*uid), UNCONDITIONAL, "Empty block");
     addBasicBlock(cfg, currentBlock);
     addEdge(prevBlock, currentBlock, UNCONDITIONAL_JUMP, NULL);
   } else {
@@ -321,11 +381,11 @@ BasicBlock *parseBlock(MyAstNode* block, Program *program, const char* filename,
       currentBlock = nestedExitBlock;
     } else if (strcmp(block->children[i]->label, WHILE) == 0) {
       BasicBlock *toExistingBlock = currentBlock->isEmpty ? currentBlock : NULL;
-      BasicBlock *nestedExitBlock = parseWhile(block->children[i], program, filename, currentBlock, toExistingBlock, cfg, uid);
+      BasicBlock *nestedExitBlock = parseWhile(block->children[i], program, filename, currentBlock, toExistingBlock, loopExitBlock, cfg, uid);
       currentBlock = nestedExitBlock;
     } else if (strcmp(block->children[i]->label, DO_WHILE) == 0) {
       BasicBlock *toExistingBlock = currentBlock->isEmpty ? currentBlock : NULL;
-      BasicBlock *nestedExitBlock = parseDoWhile(block->children[i], program, filename, currentBlock, toExistingBlock, cfg, uid);
+      BasicBlock *nestedExitBlock = parseDoWhile(block->children[i], program, filename, currentBlock, toExistingBlock, loopExitBlock, cfg, uid);
       currentBlock = nestedExitBlock;      
     } else if (strcmp(block->children[i]->label, BREAK) == 0) {
       OperationTreeNode *breakOtNode = newOperationTreeNode(OT_BREAK, 0, block->children[i]->children[0]->line, block->children[i]->children[0]->pos, false);

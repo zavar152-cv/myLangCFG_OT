@@ -1,0 +1,14 @@
+int main(string[] args) {
+    do {
+        int y;
+        check();
+        int k;
+        do {
+            call();
+        } while (true);
+        if (true) {
+            call();
+            call();
+        }
+    } while (true);
+}

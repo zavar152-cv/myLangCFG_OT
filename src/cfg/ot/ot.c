@@ -31,7 +31,8 @@ bool isBinaryOp(const char *label) {
   return strcmp(label, PLUS) == 0 |
           strcmp(label, MINUS) == 0 |
           strcmp(label, MUL) == 0 |
-          strcmp(label, DIV) == 0;
+          strcmp(label, DIV) == 0 |
+          strcmp(label, MOD) == 0;
 }
 
 bool isUnaryOp(const char *label) {

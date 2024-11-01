@@ -103,7 +103,6 @@ void writeCallGraphToDot(CallGraph *cg, const char *filename) {
     fprintf(file, "digraph CallGraph {\n");
     fprintf(file, "    node [shape=ellipse, style=filled, color=lightblue];\n\n");
     
-    // Вывод узлов
     FunctionNode *fn = cg->functions;
     while (fn != NULL) {
         fprintf(file, "    \"%s\";\n", fn->functionName);
@@ -112,7 +111,6 @@ void writeCallGraphToDot(CallGraph *cg, const char *filename) {
     
     fprintf(file, "\n");
     
-    // Вывод рёбер
     fn = cg->functions;
     while (fn != NULL) {
         CallEdge *edge = fn->outEdges;

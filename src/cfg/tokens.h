@@ -9,6 +9,7 @@
 #define     MINUS "-"
 #define     MUL "*"
 #define     DIV "/"
+#define     MOD "%"
 #define     ASSIGN "="
 #define     NEG "-"
 #define     NOT "!"

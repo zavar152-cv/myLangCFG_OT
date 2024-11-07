@@ -1,4 +1,5 @@
 #include "cfg.h"
+#include "grammar/ast/myAst.h"
 #include "ot/ot.h"
 #include <assert.h>
 #include <stdbool.h>
@@ -366,7 +367,7 @@ BasicBlock *parseIf(MyAstNode* ifBlock, Program *program, const char* filename, 
 }
 
 BasicBlock *parseBlock(MyAstNode* block, Program *program, const char* filename, bool isLoop, BasicBlock* prevBlock, BasicBlock* existingBlock, BasicBlock* loopExitBlock, CFG *cfg, uint32_t *uid) {
-  assert(strcmp(block->label, BLOCK) == 0);
+  //assert(strcmp(block->label, BLOCK) == 0);
   BasicBlock *currentBlock;
   if (existingBlock == NULL) {
     currentBlock = createEmptyBasicBlock(++(*uid), UNCONDITIONAL, "Empty block");
@@ -374,6 +375,16 @@ BasicBlock *parseBlock(MyAstNode* block, Program *program, const char* filename,
     addEdge(prevBlock, currentBlock, UNCONDITIONAL_JUMP, NULL);
   } else {
     currentBlock = existingBlock;
+  }
+
+  //bad idea! But this is to maintain back-compatibility for handling non-BLOCK cases.
+  bool fakeNodeCreated = false;
+  MyAstNode* fakeNode = NULL;
+  if (strcmp(block->label, BLOCK) != 0) {
+    fakeNode = newMyAstNode("BLOCK", 1, block->line, block->pos, true);
+    fakeNode->children[0] = block;
+    block = fakeNode;
+    fakeNodeCreated = true;
   }
 
   for (uint32_t i = 0; i < block->childCount; i++) {
@@ -427,6 +438,12 @@ BasicBlock *parseBlock(MyAstNode* block, Program *program, const char* filename,
     } else if (strcmp(block->children[i]->label, EXPR) == 0) {
       parseExpr(block->children[i], currentBlock, program, filename);
     }
+  }
+
+  if (fakeNodeCreated) {
+    free(fakeNode->children);
+    free((void *)fakeNode->label);
+    free(fakeNode);
   }
 
   return currentBlock;
